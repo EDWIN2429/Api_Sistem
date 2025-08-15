@@ -331,10 +331,10 @@ class ApiSystem {
                     <div class="btn-group" role="group">
                         <a href="edit.html?id=${
                           query.id
-                        }" class="btn btn-warning btn-sm">
+                        }" class="btn btn-outline-primary btn-sm btn-edit">
                             <i class="bi bi-pencil"></i>
                         </a>
-                        <button class="btn btn-danger btn-sm btn-delete" data-id="${
+                        <button class="btn btn-outline-danger btn-sm btn-delete" data-id="${
                           query.id
                         }" data-title="${this.escapeHtml(query.title)}">
                             <i class="bi bi-trash"></i>

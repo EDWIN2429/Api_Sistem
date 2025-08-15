@@ -47,40 +47,35 @@
       </div>
     </nav>
 
-    <!-- Main Content -->
-    <div class="container mt-4">
-      <!-- Breadcrumb -->
-      <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="index.html">Dashboard</a></li>
-          <li class="breadcrumb-item active" aria-current="page">
-            Editar Consulta
-          </li>
-        </ol>
-      </nav>
-
       <!-- Page Header -->
-      <div class="row mb-4">
-        <div class="col-12">
-          <div class="d-flex justify-content-between align-items-center">
-            <h1 class="h3 mb-0">
-              <i class="bi bi-pencil-square text-warning me-2"></i>
-              Editar Consulta
-            </h1>
-            <a href="index.html" class="btn btn-secondary">
-              <i class="bi bi-arrow-left me-2"></i>
-              Volver al Dashboard
-            </a>
+      <div class="row justify-content-center mt-4">
+        <div class="col-lg-8">
+          <div class="row align-items-center mb-4">
+            <!-- Columna izquierda: título y descripción -->
+            <div class="col-md-8">
+              <h1 class="h3 mb-2">
+                <i class="bi bi-pencil-square text-primary me-2"></i>
+                Editar Consulta
+              </h1>
+              <p class="text-muted mb-0">Modifica una consulta SQL existente</p>
+            </div>
+
+            <!-- Columna derecha: botón -->
+            <div class="col-md-4 text-end">
+              <a href="index.html" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left me-2"></i>
+                Volver al Dashboard
+              </a>
+            </div>
           </div>
-          <p class="text-muted mt-2">Modifica una consulta SQL existente</p>
         </div>
       </div>
 
       <!-- Edit Query Form -->
       <div class="row justify-content-center">
         <div class="col-lg-8">
-          <div class="card shadow">
-            <div class="card-header bg-warning text-dark">
+          <div class="card shadow form-container">
+            <div class="card-header bg-primary text-white">
               <h5 class="mb-0">
                 <i class="bi bi-database-edit me-2"></i>
                 Editar Consulta Existente
@@ -127,7 +122,7 @@
                   <label for="edit_sql_query" class="form-label">
                     <i class="bi bi-code-slash me-1"></i>
                     Consulta SQL
-                    <span class="badge bg-warning text-dark ms-2"
+                    <span class="badge bg-info text-dark ms-2"
                       >Solo SELECT</span
                     >
                   </label>
@@ -147,20 +142,12 @@
                 </div>
 
                 <div class="d-flex justify-content-between">
-                  <a href="index.html" class="btn btn-secondary">
+                  <a href="index.html" class="btn btn-outline-secondary">
                     <i class="bi bi-x-circle me-2"></i>
                     Cancelar
                   </a>
                   <div>
-                    <button
-                      type="button"
-                      class="btn btn-danger me-2"
-                      onclick="deleteQuery()"
-                    >
-                      <i class="bi bi-trash me-2"></i>
-                      Eliminar
-                    </button>
-                    <button type="submit" class="btn btn-warning">
+                    <button type="submit" class="btn btn-success">
                       <i class="bi bi-check-circle me-2"></i>
                       Actualizar Consulta
                     </button>
