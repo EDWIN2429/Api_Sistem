@@ -245,18 +245,15 @@
       let currentSearch = "";
       let totalPages = 0;
 
-      // Check authentication status on page load
+      // Initialize ApiSystem when page loads
       document.addEventListener("DOMContentLoaded", function () {
-        checkAuthStatus();
+        // Initialize the main system
+        if (window.apiSystem) {
+          console.log("ApiSystem initialized successfully");
+        } else {
+          console.error("ApiSystem not found");
+        }
       });
-
-      // Login form submission
-      document
-        .getElementById("loginForm")
-        .addEventListener("submit", function (e) {
-          e.preventDefault();
-          login();
-        });
 
       // Search input with Enter key
       document
@@ -267,39 +264,71 @@
           }
         });
 
-      // Login function
-      async function login() {
-        const username = document.getElementById("username").value;
-        const password = document.getElementById("password").value;
+      // Global functions that will be called from other pages
+      window.showToast = function (message, type = "info") {
+        const toastContainer = document.querySelector(".toast-container");
+        if (!toastContainer) return;
 
-        try {
-          const response = await fetch("../app/auth.php", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              action: "login",
-              username: username,
-              password: password,
-            }),
-          });
+        const toast = document.createElement("div");
+        toast.className = `toast align-items-center text-white bg-${type} border-0`;
+        toast.setAttribute("role", "alert");
+        toast.setAttribute("aria-live", "assertive");
+        toast.setAttribute("aria-atomic", "true");
 
-          const data = await response.json();
+        toast.innerHTML = `
+          <div class="d-flex">
+            <div class="toast-body">
+              ${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+          </div>
+        `;
 
-          if (data.success) {
-            showToast("¡Login exitoso!", "success");
-            document.getElementById("currentUser").textContent = username;
-            showDashboard();
-            loadQueries();
-          } else {
-            showToast(data.message, "danger");
+        toastContainer.appendChild(toast);
+
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+          if (toast.parentNode) {
+            toast.remove();
           }
-        } catch (error) {
-          showToast("Error de conexión", "danger");
-          console.error("Error:", error);
+        }, 5000);
+      };
+
+      // Global logout function
+      window.logout = async function () {
+        if (window.apiSystem) {
+          await window.apiSystem.handleLogout();
+        } else {
+          // Fallback logout
+          window.location.href = "index.html";
         }
-      }
+      };
+
+      // Global refresh function
+      window.refreshQueries = function () {
+        if (window.apiSystem) {
+          window.apiSystem.loadQueries();
+        }
+      };
+
+      // Global search function
+      window.searchQueries = function () {
+        const searchTerm = document.getElementById("searchInput").value.trim();
+        if (window.apiSystem) {
+          window.apiSystem.searchQueries(searchTerm);
+        }
+      };
+
+      // Global change limit function
+      window.changeLimit = function () {
+        const limit = document.getElementById("limitSelect").value;
+        if (window.apiSystem) {
+          window.apiSystem.changeLimit(parseInt(limit));
+        }
+      };
 
       // Logout function
       async function logout() {

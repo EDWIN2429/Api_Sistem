@@ -1,6 +1,6 @@
 <?php
 
-require_once 'config.php';
+// No incluir config.php aquí para evitar referencia circular
 
 class Database
 {
@@ -10,6 +10,7 @@ class Database
     private function __construct()
     {
         try {
+            // Usar las constantes definidas en config.php
             $dsn = "mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET;
             $this->connection = new PDO($dsn, DB_USER, DB_PASSWORD, [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -17,7 +18,8 @@ class Database
                 PDO::ATTR_EMULATE_PREPARES => false,
             ]);
         } catch (PDOException $e) {
-            die("Error de conexión: " . $e->getMessage());
+            // En lugar de die(), lanzar una excepción para manejo adecuado
+            throw new Exception("Error de conexión: " . $e->getMessage());
         }
     }
 
@@ -91,8 +93,4 @@ class Database
     }
 }
 
-// Función helper para obtener instancia de BD
-function getDB()
-{
-    return Database::getInstance();
-}
+// La función getDB() ya está definida en config.php
