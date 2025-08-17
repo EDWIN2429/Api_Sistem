@@ -17,6 +17,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
+// ========================================
+// CLASE PRINCIPAL - Auth
+// ========================================
 class Auth
 {
     private $db;
@@ -26,18 +29,14 @@ class Auth
         $this->db = getDB();
     }
 
-    /**
-     * Autenticar usuario administrador
-     */
+    // ========================================
+    // AUTENTICACIÓN
+    // ========================================
     public function login($username, $password)
     {
         try {
-            // Validar credenciales
             if ($username === ADMIN_USERNAME && $password === ADMIN_PASSWORD) {
-                // Crear sesión
-                $_SESSION['admin_logged_in'] = true;
-                $_SESSION['admin_username'] = $username;
-                $_SESSION['login_time'] = time();
+                $this->createSession($username);
 
                 return [
                     'success' => true,
@@ -59,9 +58,6 @@ class Auth
         }
     }
 
-    /**
-     * Cerrar sesión
-     */
     public function logout()
     {
         session_destroy();
@@ -71,17 +67,14 @@ class Auth
         ];
     }
 
-    /**
-     * Verificar si el usuario está autenticado
-     */
+    // ========================================
+    // VERIFICACIÓN DE SESIÓN
+    // ========================================
     public function isAuthenticated()
     {
         return isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true;
     }
 
-    /**
-     * Obtener información de la sesión actual
-     */
     public function getSessionInfo()
     {
         if (!$this->isAuthenticated()) {
@@ -99,87 +92,40 @@ class Auth
         ];
     }
 
-    /**
-     * Generar token de sesión único
-     */
+    // ========================================
+    // MÉTODOS PRIVADOS
+    // ========================================
+    private function createSession($username)
+    {
+        $_SESSION['admin_logged_in'] = true;
+        $_SESSION['admin_username'] = $username;
+        $_SESSION['login_time'] = time();
+    }
+
     private function generateSessionToken()
     {
         return bin2hex(random_bytes(32));
     }
 
-    /**
-     * Validar token de sesión
-     */
     public function validateSessionToken($token)
     {
-        // Implementar validación de token si es necesario
         return $this->isAuthenticated();
     }
 }
 
-// Instanciar clase de autenticación
+// ========================================
+// MANEJO DE REQUESTS HTTP
+// ========================================
 $auth = new Auth();
-
-// Manejar diferentes tipos de requests
 $method = $_SERVER['REQUEST_METHOD'];
 
 switch ($method) {
     case 'POST':
-        $input = json_decode(file_get_contents('php://input'), true);
-
-        if (isset($input['action'])) {
-            switch ($input['action']) {
-                case 'login':
-                    if (isset($input['username']) && isset($input['password'])) {
-                        $result = $auth->login($input['username'], $input['password']);
-                        echo json_encode($result);
-                    } else {
-                        echo json_encode([
-                            'success' => false,
-                            'message' => 'Usuario y contraseña requeridos'
-                        ]);
-                    }
-                    break;
-
-                case 'logout':
-                    $result = $auth->logout();
-                    echo json_encode($result);
-                    break;
-
-                default:
-                    echo json_encode([
-                        'success' => false,
-                        'message' => 'Acción no válida'
-                    ]);
-            }
-        } else {
-            echo json_encode([
-                'success' => false,
-                'message' => 'Acción no especificada'
-            ]);
-        }
+        handlePostRequest($auth);
         break;
 
     case 'GET':
-        if (isset($_GET['action'])) {
-            switch ($_GET['action']) {
-                case 'check':
-                    $result = $auth->getSessionInfo();
-                    echo json_encode($result);
-                    break;
-
-                default:
-                    echo json_encode([
-                        'success' => false,
-                        'message' => 'Acción no válida'
-                    ]);
-            }
-        } else {
-            echo json_encode([
-                'success' => false,
-                'message' => 'Acción no especificada'
-            ]);
-        }
+        handleGetRequest($auth);
         break;
 
     default:
@@ -188,4 +134,75 @@ switch ($method) {
             'message' => 'Método no permitido'
         ]);
         break;
+}
+
+// ========================================
+// FUNCIONES AUXILIARES PARA MANEJAR REQUESTS
+// ========================================
+function handlePostRequest($auth)
+{
+    $input = json_decode(file_get_contents('php://input'), true);
+
+    if (!isset($input['action'])) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Acción no especificada'
+        ]);
+        return;
+    }
+
+    switch ($input['action']) {
+        case 'login':
+            handleLogin($auth, $input);
+            break;
+
+        case 'logout':
+            $result = $auth->logout();
+            echo json_encode($result);
+            break;
+
+        default:
+            echo json_encode([
+                'success' => false,
+                'message' => 'Acción no válida'
+            ]);
+    }
+}
+
+function handleGetRequest($auth)
+{
+    if (!isset($_GET['action'])) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Acción no especificada'
+        ]);
+        return;
+    }
+
+    switch ($_GET['action']) {
+        case 'check':
+            $result = $auth->getSessionInfo();
+            echo json_encode($result);
+            break;
+
+        default:
+            echo json_encode([
+                'success' => false,
+                'message' => 'Acción no válida'
+            ]);
+    }
+}
+
+function handleLogin($auth, $input)
+{
+    if (!isset($input['username']) || !isset($input['password'])) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Usuario y contraseña requeridos'
+        ]);
+        return;
+    }
+
+    $result = $auth->login($input['username'], $input['password']);
+    echo json_encode($result);
 }

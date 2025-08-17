@@ -10,13 +10,11 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
-
     <!-- Bootstrap Icons -->
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css"
       rel="stylesheet"
     />
-
     <!-- Custom CSS -->
     <link href="assets/css/style.css" rel="stylesheet" />
   </head>
@@ -47,114 +45,132 @@
       </div>
     </nav>
 
-      <!-- Page Header -->
-      <div class="row justify-content-center mt-4">
-        <div class="col-lg-8">
-          <div class="row align-items-center mb-4">
-            <!-- Columna izquierda: título y descripción -->
-            <div class="col-md-8">
-              <h1 class="h3 mb-2">
-                <i class="bi bi-pencil-square text-primary me-2"></i>
-                Editar Consulta
-              </h1>
-              <p class="text-muted mb-0">Modifica una consulta SQL existente</p>
-            </div>
-
-            <!-- Columna derecha: botón -->
-            <div class="col-md-4 text-end">
-              <a href="index.html" class="btn btn-outline-primary">
-                <i class="bi bi-arrow-left me-2"></i>
-                Volver al Dashboard
-              </a>
-            </div>
+    <!-- Page Header -->
+    <div class="row justify-content-center mt-4">
+      <div class="col-lg-8">
+        <div class="row align-items-center mb-4">
+          <div class="col-md-8">
+            <h1 class="h3 mb-2">
+              <i class="bi bi-pencil-square text-primary me-2"></i>
+              Editar Consulta
+            </h1>
+            <p class="text-muted mb-0">Modifica una consulta SQL existente</p>
+          </div>
+          <div class="col-md-4 text-end">
+            <a href="index.html" class="btn btn-outline-primary">
+              <i class="bi bi-arrow-left me-2"></i>
+              Volver al Dashboard
+            </a>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Edit Query Form -->
-      <div class="row justify-content-center">
-        <div class="col-lg-8">
-          <div class="card shadow form-container">
-            <div class="card-header bg-primary text-white">
-              <h5 class="mb-0">
-                <i class="bi bi-database-edit me-2"></i>
-                Editar Consulta Existente
-              </h5>
-            </div>
-            <div class="card-body">
-              <form id="editQueryForm">
-                <!-- Hidden fields for query data -->
-                <input type="hidden" id="query_id" name="query_id" />
+    <!-- Edit Query Form -->
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card shadow form-container">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+              <i class="bi bi-database-edit me-2"></i>
+              Editar Consulta Existente
+            </h5>
+          </div>
+          <div class="card-body">
+            <form id="editQueryForm">
+              <input type="hidden" id="query_id" name="query_id" />
 
-                <div class="mb-3">
-                  <label for="edit_title" class="form-label">
-                    <i class="bi bi-tag me-1"></i>
-                    Título de la Consulta
-                  </label>
-                  <input
-                    type="text"
-                    class="form-control"
-                    id="edit_title"
-                    name="edit_title"
-                    placeholder="Ej: Usuarios Activos"
-                    required
-                  />
-                  <div class="form-text">
-                    Nombre descriptivo para identificar la consulta
+              <div class="mb-3">
+                <label for="edit_title" class="form-label">
+                  <i class="bi bi-tag me-1"></i>
+                  Título de la Consulta
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="edit_title"
+                  name="edit_title"
+                  placeholder="Ej: Usuarios Activos"
+                  required
+                />
+                <div class="form-text">
+                  Nombre descriptivo para identificar la consulta
+                </div>
+
+                <!-- Alerta de error que aparece solo cuando hay problema -->
+                <div
+                  id="editTitleErrorAlert"
+                  class="alert alert-danger mt-2"
+                  role="alert"
+                  style="display: none"
+                >
+                  <div class="d-flex align-items-start">
+                    <i class="bi bi-exclamation-triangle me-2 mt-1"></i>
+                    <div>
+                      <strong>Error en el título:</strong>
+                      <div id="editTitleErrorMessage" class="mt-1"></div>
+                      <hr class="my-2" />
+                      <strong>Caracteres permitidos:</strong>
+                      <ul class="mb-0 mt-1 small">
+                        <li>✅ <strong>Letras:</strong> a-z, A-Z</li>
+                        <li>✅ <strong>Números:</strong> 0-9</li>
+                        <li>✅ <strong>Espacios</strong></li>
+                        <li>✅ <strong>Guiones:</strong> - _</li>
+                      </ul>
+                      <div class="mt-2 text-muted small">
+                        <strong>No usar:</strong> + . , : ; ( ) á é í ó ú ñ
+                      </div>
+                    </div>
                   </div>
                 </div>
+              </div>
 
-                <div class="mb-3">
-                  <label for="edit_description" class="form-label">
-                    <i class="bi bi-card-text me-1"></i>
-                    Descripción (Opcional)
-                  </label>
-                  <textarea
-                    class="form-control"
-                    id="edit_description"
-                    name="edit_description"
-                    rows="3"
-                    placeholder="Describe el propósito de esta consulta..."
-                  ></textarea>
-                </div>
+              <div class="mb-3">
+                <label for="edit_description" class="form-label">
+                  <i class="bi bi-card-text me-1"></i>
+                  Descripción (Opcional)
+                </label>
+                <textarea
+                  class="form-control"
+                  id="edit_description"
+                  name="edit_description"
+                  rows="3"
+                  placeholder="Describe el propósito de esta consulta..."
+                ></textarea>
+              </div>
 
-                <div class="mb-3">
-                  <label for="edit_sql_query" class="form-label">
-                    <i class="bi bi-code-slash me-1"></i>
-                    Consulta SQL
-                    <span class="badge bg-info text-dark ms-2"
-                      >Solo SELECT</span
-                    >
-                  </label>
-                  <textarea
-                    class="form-control font-monospace"
-                    id="edit_sql_query"
-                    name="edit_sql_query"
-                    rows="8"
-                    placeholder="SELECT * FROM tabla WHERE condicion"
-                    required
-                  ></textarea>
-                  <div class="form-text">
-                    <i class="bi bi-info-circle me-1"></i>
-                    Solo se permiten consultas SELECT por seguridad. Ejemplo:
-                    SELECT id, nombre FROM usuarios WHERE activo = 1
-                  </div>
+              <div class="mb-3">
+                <label for="edit_sql_query" class="form-label">
+                  <i class="bi bi-code-slash me-1"></i>
+                  Consulta SQL
+                  <span class="badge bg-info text-dark ms-2">Solo SELECT</span>
+                </label>
+                <textarea
+                  class="form-control font-monospace"
+                  id="edit_sql_query"
+                  name="edit_sql_query"
+                  rows="8"
+                  placeholder="SELECT * FROM tabla WHERE condicion"
+                  required
+                ></textarea>
+                <div class="form-text">
+                  <i class="bi bi-info-circle me-1"></i>
+                  Solo se permiten consultas SELECT por seguridad. Ejemplo:
+                  SELECT id, nombre FROM usuarios WHERE activo = 1
                 </div>
+              </div>
 
-                <div class="d-flex justify-content-between">
-                  <a href="index.html" class="btn btn-outline-secondary">
-                    <i class="bi bi-x-circle me-2"></i>
-                    Cancelar
-                  </a>
-                  <div>
-                    <button type="submit" class="btn btn-success">
-                      <i class="bi bi-check-circle me-2"></i>
-                      Actualizar Consulta
-                    </button>
-                  </div>
-                </div>
-              </form>
-            </div>
+              <div class="d-flex justify-content-between">
+                <a href="index.html" class="btn btn-outline-secondary">
+                  <i class="bi bi-x-circle me-2"></i>
+                  Cancelar
+                </a>
+                <button type="submit" class="btn btn-success">
+                  <i class="bi bi-check-circle me-2"></i>
+                  Actualizar Consulta
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
@@ -162,65 +178,7 @@
 
     <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
     <!-- Custom JS -->
     <script src="assets/js/app.js"></script>
-
-    <!-- Page Specific JS -->
-    <script>
-      // Validar que sea consulta SELECT
-      document
-        .getElementById("edit_sql_query")
-        .addEventListener("input", function () {
-          const query = this.value.trim().toUpperCase();
-          if (query && !query.startsWith("SELECT")) {
-            this.classList.add("is-invalid");
-            this.nextElementSibling.innerHTML =
-              '<i class="bi bi-exclamation-triangle text-danger me-1"></i> Solo se permiten consultas SELECT por seguridad';
-          } else {
-            this.classList.remove("is-invalid");
-            this.nextElementSibling.innerHTML =
-              '<i class="bi bi-info-circle me-1"></i> Solo se permiten consultas SELECT por seguridad. Ejemplo: SELECT id, nombre FROM usuarios WHERE activo = 1';
-          }
-        });
-
-      // Función para eliminar consulta
-      function deleteQuery() {
-        const queryId = document.getElementById("query_id").value;
-        const queryTitle = document.getElementById("edit_title").value;
-
-        if (
-          confirm(
-            `¿Estás seguro de que quieres eliminar la consulta "${queryTitle}"?`
-          )
-        ) {
-          // Aquí se implementaría la lógica de eliminación
-          console.log("Eliminando consulta:", queryId);
-          // Redirigir al dashboard después de eliminar
-          window.location.href = "index.html";
-        }
-      }
-
-      // Cargar datos de la consulta al cargar la página
-      document.addEventListener("DOMContentLoaded", function () {
-        // Obtener parámetros de la URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const queryId = urlParams.get("id");
-
-        if (queryId) {
-          // Aquí se cargarían los datos de la consulta desde el backend
-          loadQueryData(queryId);
-        } else {
-          // Si no hay ID, redirigir al dashboard
-          window.location.href = "index.html";
-        }
-      });
-
-      // Función para cargar datos de la consulta
-      function loadQueryData(queryId) {
-        // Aquí se implementaría la carga de datos desde el backend
-        console.log("Cargando consulta:", queryId);
-      }
-    </script>
   </body>
 </html>

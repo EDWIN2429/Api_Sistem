@@ -155,11 +155,5 @@ try {
     error_log("API Error - System error: " . $e->getMessage());
 }
 
-/**
- * Función helper para obtener instancia de BD
- */
-function getDB()
-{
-    require_once '../app/database.php';
-    return Database::getInstance();
-}
+// Usar la función getDB() de config.php
+require_once '../app/config.php';

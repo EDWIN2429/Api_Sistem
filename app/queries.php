@@ -17,6 +17,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
+// ========================================
+// CLASE PRINCIPAL - QueriesManager
+// ========================================
 class QueriesManager
 {
     private $db;
@@ -26,17 +29,17 @@ class QueriesManager
         $this->db = getDB();
     }
 
-    /**
-     * Verificar si el usuario está autenticado como admin
-     */
+    // ========================================
+    // AUTENTICACIÓN
+    // ========================================
     private function isAdminAuthenticated()
     {
         return isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true;
     }
 
-    /**
-     * Validar que la consulta SQL sea de tipo SELECT únicamente
-     */
+    // ========================================
+    // VALIDACIONES
+    // ========================================
     private function validateSelectQuery($sql)
     {
         $sqlLower = strtolower(trim($sql));
@@ -74,19 +77,44 @@ class QueriesManager
         }
 
         // Verificar que NO contenga múltiples consultas
-        if (strpos($sql, ';') !== false) {
+        $sqlClean = preg_replace('/\s+/', ' ', trim($sql));
+
+        if (preg_match('/;\s*(select|insert|update|delete|create|drop|alter|truncate|replace|grant|revoke|execute)/i', $sqlClean)) {
             return [
                 'valid' => false,
                 'message' => 'No se permiten múltiples consultas separadas por punto y coma'
             ];
         }
 
+        // Verificar que NO contenga solo punto y coma
+        if (trim($sql) === ';') {
+            return [
+                'valid' => false,
+                'message' => 'Consulta SQL inválida'
+            ];
+        }
+
+        // Verificar funciones peligrosas
+        $dangerousFunctions = [
+            'sleep',
+            'benchmark',
+            'load_file',
+            'into outfile',
+            'into dumpfile'
+        ];
+
+        foreach ($dangerousFunctions as $func) {
+            if (strpos($sqlLower, $func) !== false) {
+                return [
+                    'valid' => false,
+                    'message' => 'La consulta contiene funciones no permitidas: ' . strtoupper($func)
+                ];
+            }
+        }
+
         return ['valid' => true, 'message' => 'Consulta válida'];
     }
 
-    /**
-     * Validar título de la consulta
-     */
     private function validateTitle($title)
     {
         $title = trim($title);
@@ -115,9 +143,6 @@ class QueriesManager
         return ['valid' => true, 'title' => $title];
     }
 
-    /**
-     * Verificar si el título ya existe (excluyendo el ID actual para updates)
-     */
     private function titleExists($title, $excludeId = null)
     {
         try {
@@ -134,10 +159,10 @@ class QueriesManager
         }
     }
 
-    /**
-     * CREATE - Crear nueva consulta
-     */
-    public function createQuery($title, $sqlQuery)
+    // ========================================
+    // OPERACIONES CRUD
+    // ========================================
+    public function createQuery($title, $sqlQuery, $description = '')
     {
         try {
             if (!$this->isAdminAuthenticated()) {
@@ -180,9 +205,10 @@ class QueriesManager
             }
 
             // Insertar en la base de datos
-            $sql = "INSERT INTO queries (title, sql_query) VALUES (:title, :sql_query)";
+            $sql = "INSERT INTO queries (title, description, sql_query) VALUES (:title, :description, :sql_query)";
             $result = $this->db->execute($sql, [
                 'title' => $title,
+                'description' => $description,
                 'sql_query' => $sqlQuery
             ]);
 
@@ -194,6 +220,7 @@ class QueriesManager
                     'data' => [
                         'id' => $queryId,
                         'title' => $title,
+                        'description' => $description,
                         'created_at' => date('Y-m-d H:i:s')
                     ]
                 ];
@@ -213,9 +240,6 @@ class QueriesManager
         }
     }
 
-    /**
-     * READ - Obtener consultas (con paginación opcional)
-     */
     public function getQueries($page = 1, $limit = 10, $search = '')
     {
         try {
@@ -231,16 +255,16 @@ class QueriesManager
 
             // Construir consulta con búsqueda opcional
             if (!empty($search)) {
-                $sql = "SELECT * FROM queries WHERE title LIKE :search OR sql_query LIKE :search ORDER BY created_at DESC LIMIT :limit OFFSET :offset";
+                $sql = "SELECT * FROM queries WHERE title LIKE :search1 OR sql_query LIKE :search2 ORDER BY created_at DESC LIMIT :limit OFFSET :offset";
                 $params = [
-                    'search' => '%' . $search . '%',
+                    'search1' => '%' . $search . '%',
+                    'search2' => '%' . $search . '%',
                     'limit' => $limit,
                     'offset' => $offset
                 ];
 
-                // Contar total de resultados para paginación
-                $countSql = "SELECT COUNT(*) as total FROM queries WHERE title LIKE :search OR sql_query LIKE :search";
-                $countResult = $this->db->query($countSql, ['search' => '%' . $search . '%']);
+                $countSql = "SELECT COUNT(*) as total FROM queries WHERE title LIKE :search1 OR sql_query LIKE :search2";
+                $countResult = $this->db->query($countSql, ['search1' => '%' . $search . '%', 'search2' => '%' . $search . '%']);
                 $total = $countResult[0]['total'];
             } else {
                 $sql = "SELECT * FROM queries ORDER BY created_at DESC LIMIT :limit OFFSET :offset";
@@ -249,7 +273,6 @@ class QueriesManager
                     'offset' => $offset
                 ];
 
-                // Contar total de resultados para paginación
                 $countResult = $this->db->query("SELECT COUNT(*) as total FROM queries");
                 $total = $countResult[0]['total'];
             }
@@ -275,9 +298,6 @@ class QueriesManager
         }
     }
 
-    /**
-     * READ - Obtener consulta por ID
-     */
     public function getQueryById($id)
     {
         try {
@@ -313,10 +333,7 @@ class QueriesManager
         }
     }
 
-    /**
-     * UPDATE - Actualizar consulta existente
-     */
-    public function updateQuery($id, $title, $sqlQuery)
+    public function updateQuery($id, $title, $sqlQuery, $description = '')
     {
         try {
             if (!$this->isAdminAuthenticated()) {
@@ -365,10 +382,11 @@ class QueriesManager
             }
 
             // Actualizar en la base de datos
-            $sql = "UPDATE queries SET title = :title, sql_query = :sql_query, updated_at = CURRENT_TIMESTAMP WHERE id = :id";
+            $sql = "UPDATE queries SET title = :title, description = :description, sql_query = :sql_query, updated_at = CURRENT_TIMESTAMP WHERE id = :id";
             $result = $this->db->execute($sql, [
                 'id' => $id,
                 'title' => $title,
+                'description' => $description,
                 'sql_query' => $sqlQuery
             ]);
 
@@ -379,6 +397,7 @@ class QueriesManager
                     'data' => [
                         'id' => $id,
                         'title' => $title,
+                        'description' => $description,
                         'updated_at' => date('Y-m-d H:i:s')
                     ]
                 ];
@@ -398,9 +417,6 @@ class QueriesManager
         }
     }
 
-    /**
-     * DELETE - Eliminar consulta
-     */
     public function deleteQuery($id)
     {
         try {
@@ -448,134 +464,27 @@ class QueriesManager
     }
 }
 
-// Instanciar clase
+// ========================================
+// MANEJO DE REQUESTS HTTP
+// ========================================
 $queriesManager = new QueriesManager();
-
-// Manejar diferentes tipos de requests
 $method = $_SERVER['REQUEST_METHOD'];
 
 switch ($method) {
     case 'GET':
-        if (isset($_GET['id'])) {
-            // Obtener consulta específica por ID
-            $result = $queriesManager->getQueryById($_GET['id']);
-        } else {
-            // Obtener lista de consultas con paginación opcional
-            $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-            $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
-            $search = isset($_GET['search']) ? $_GET['search'] : '';
-
-            $result = $queriesManager->getQueries($page, $limit, $search);
-        }
-        echo json_encode($result);
+        handleGetRequest($queriesManager);
         break;
 
     case 'POST':
-        // Crear nueva consulta
-        $input = json_decode(file_get_contents('php://input'), true);
-
-        if (!$input || !isset($input['title']) || !isset($input['sql_query'])) {
-            http_response_code(400);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Los campos "title" y "sql_query" son obligatorios',
-                'code' => 'MISSING_FIELDS'
-            ]);
-            exit();
-        }
-
-        $result = $queriesManager->createQuery($input['title'], $input['sql_query']);
-
-        if ($result['success']) {
-            http_response_code(201);
-        } else {
-            switch ($result['code']) {
-                case 'UNAUTHORIZED':
-                    http_response_code(401);
-                    break;
-                case 'INVALID_TITLE':
-                case 'INVALID_SQL':
-                case 'TITLE_EXISTS':
-                    http_response_code(400);
-                    break;
-                default:
-                    http_response_code(500);
-            }
-        }
-
-        echo json_encode($result);
+        handlePostRequest($queriesManager);
         break;
 
     case 'PUT':
-        // Actualizar consulta existente
-        $input = json_decode(file_get_contents('php://input'), true);
-
-        if (!$input || !isset($input['id']) || !isset($input['title']) || !isset($input['sql_query'])) {
-            http_response_code(400);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Los campos "id", "title" y "sql_query" son obligatorios',
-                'code' => 'MISSING_FIELDS'
-            ]);
-            exit();
-        }
-
-        $result = $queriesManager->updateQuery($input['id'], $input['title'], $input['sql_query']);
-
-        if (!$result['success']) {
-            switch ($result['code']) {
-                case 'UNAUTHORIZED':
-                    http_response_code(401);
-                    break;
-                case 'NOT_FOUND':
-                    http_response_code(404);
-                    break;
-                case 'INVALID_TITLE':
-                case 'INVALID_SQL':
-                case 'TITLE_EXISTS':
-                    http_response_code(400);
-                    break;
-                default:
-                    http_response_code(500);
-            }
-        }
-
-        echo json_encode($result);
+        handlePutRequest($queriesManager);
         break;
 
     case 'DELETE':
-        // Eliminar consulta
-        if (isset($_GET['id'])) {
-            $result = $queriesManager->deleteQuery($_GET['id']);
-        } else {
-            $input = json_decode(file_get_contents('php://input'), true);
-            if (isset($input['id'])) {
-                $result = $queriesManager->deleteQuery($input['id']);
-            } else {
-                http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'ID de consulta requerido',
-                    'code' => 'MISSING_ID'
-                ]);
-                exit();
-            }
-        }
-
-        if (!$result['success']) {
-            switch ($result['code']) {
-                case 'UNAUTHORIZED':
-                    http_response_code(401);
-                    break;
-                case 'NOT_FOUND':
-                    http_response_code(404);
-                    break;
-                default:
-                    http_response_code(500);
-            }
-        }
-
-        echo json_encode($result);
+        handleDeleteRequest($queriesManager);
         break;
 
     default:
@@ -586,4 +495,117 @@ switch ($method) {
             'code' => 'METHOD_NOT_ALLOWED'
         ]);
         break;
+}
+
+// ========================================
+// FUNCIONES AUXILIARES PARA MANEJAR REQUESTS
+// ========================================
+function handleGetRequest($queriesManager)
+{
+    if (isset($_GET['id'])) {
+        $result = $queriesManager->getQueryById($_GET['id']);
+    } else {
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+        $search = isset($_GET['search']) ? $_GET['search'] : '';
+
+        $result = $queriesManager->getQueries($page, $limit, $search);
+    }
+
+    echo json_encode($result);
+}
+
+function handlePostRequest($queriesManager)
+{
+    $input = json_decode(file_get_contents('php://input'), true);
+
+    if (!$input || !isset($input['title']) || !isset($input['sql_query'])) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Los campos "title" y "sql_query" son obligatorios',
+            'code' => 'MISSING_FIELDS'
+        ]);
+        exit();
+    }
+
+    $description = isset($input['description']) ? $input['description'] : '';
+    $result = $queriesManager->createQuery($input['title'], $input['sql_query'], $description);
+
+    if ($result['success']) {
+        http_response_code(201);
+    } else {
+        setErrorResponseCode($result['code']);
+    }
+
+    echo json_encode($result);
+}
+
+function handlePutRequest($queriesManager)
+{
+    $input = json_decode(file_get_contents('php://input'), true);
+
+    if (!$input || !isset($input['id']) || !isset($input['title']) || !isset($input['sql_query'])) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Los campos "id", "title" y "sql_query" son obligatorios',
+            'code' => 'MISSING_FIELDS'
+        ]);
+        exit();
+    }
+
+    $description = isset($input['description']) ? $input['description'] : '';
+    $result = $queriesManager->updateQuery($input['id'], $input['title'], $input['sql_query'], $description);
+
+    if (!$result['success']) {
+        setErrorResponseCode($result['code']);
+    }
+
+    echo json_encode($result);
+}
+
+function handleDeleteRequest($queriesManager)
+{
+    if (isset($_GET['id'])) {
+        $result = $queriesManager->deleteQuery($_GET['id']);
+    } else {
+        $input = json_decode(file_get_contents('php://input'), true);
+        if (isset($input['id'])) {
+            $result = $queriesManager->deleteQuery($input['id']);
+        } else {
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'message' => 'ID de consulta requerido',
+                'code' => 'MISSING_ID'
+            ]);
+            exit();
+        }
+    }
+
+    if (!$result['success']) {
+        setErrorResponseCode($result['code']);
+    }
+
+    echo json_encode($result);
+}
+
+function setErrorResponseCode($code)
+{
+    switch ($code) {
+        case 'UNAUTHORIZED':
+            http_response_code(401);
+            break;
+        case 'NOT_FOUND':
+            http_response_code(404);
+            break;
+        case 'INVALID_TITLE':
+        case 'INVALID_SQL':
+        case 'TITLE_EXISTS':
+            http_response_code(400);
+            break;
+        default:
+            http_response_code(500);
+    }
 }

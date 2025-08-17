@@ -1,8 +1,10 @@
 /* ========================================
-   SISTEMA DE API - ESTILOS OPTIMIZADOS
+   SISTEMA DE API - ESTILOS OPTIMIZADOS Y ORGANIZADOS
    ======================================== */
 
-/* Variables CSS */
+/* ========================================
+   VARIABLES CSS
+   ======================================== */
 :root {
   --primary: #0d6efd;
   --primary-hover: #0b5ed7;
@@ -17,14 +19,18 @@
   --transition: all 0.3s ease;
 }
 
-/* Estilos base */
+/* ========================================
+   ESTILOS BASE
+   ======================================== */
 body {
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   min-height: 100vh;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Navbar */
+/* ========================================
+   NAVBAR
+   ======================================== */
 .navbar {
   background: var(--primary) !important;
   box-shadow: 0 2px 8px rgba(13, 110, 253, 0.15);
@@ -36,13 +42,17 @@ body {
   font-size: 1.4rem;
 }
 
-/* Contenedores */
+/* ========================================
+   CONTENEDORES
+   ======================================== */
 .container {
   position: relative;
   z-index: 1;
 }
 
-/* Tarjetas */
+/* ========================================
+   TARJETAS
+   ======================================== */
 .card {
   border: 1px solid rgba(0, 0, 0, 0.05);
   border-radius: var(--border-radius);
@@ -50,6 +60,7 @@ body {
   background: rgba(255, 255, 255, 0.98);
   transition: var(--transition);
   overflow: hidden;
+  animation: fadeInUp 0.6s ease-out;
 }
 
 .card:hover {
@@ -68,7 +79,9 @@ body {
   padding: 2rem;
 }
 
-/* Formularios */
+/* ========================================
+   FORMULARIOS
+   ======================================== */
 .form-label {
   font-weight: 600;
   color: var(--dark);
@@ -105,7 +118,19 @@ body {
   transform: translateY(-1px);
 }
 
-/* Formularios específicos */
+.form-control.is-invalid {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.15);
+}
+
+.form-control.is-valid {
+  border-color: var(--success);
+  box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.15);
+}
+
+/* ========================================
+   FORMULARIOS ESPECÍFICOS
+   ======================================== */
 .form-container {
   max-width: 800px;
   margin: 0 auto;
@@ -137,7 +162,9 @@ body {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
 }
 
-/* Textareas SQL */
+/* ========================================
+   TEXTAREAS SQL
+   ======================================== */
 #sql_query,
 #edit_sql_query {
   background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
@@ -155,7 +182,9 @@ body {
   background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
 }
 
-/* Botones base */
+/* ========================================
+   BOTONES
+   ======================================== */
 .btn {
   border-radius: var(--border-radius);
   padding: 0.75rem 1.5rem;
@@ -169,7 +198,11 @@ body {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
 }
 
-/* Botones específicos */
+.btn:hover .bi {
+  transform: scale(1.1);
+}
+
+/* Botones primarios */
 .btn-primary {
   background: var(--primary);
   box-shadow: 0 2px 8px rgba(13, 110, 253, 0.2);
@@ -190,6 +223,7 @@ body {
   box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
 }
 
+/* Botones outline */
 .btn-outline-primary {
   color: var(--primary);
   border: 2px solid var(--primary);
@@ -226,7 +260,9 @@ body {
   border-color: var(--secondary);
 }
 
-/* Botones del dashboard */
+/* ========================================
+   BOTONES DEL DASHBOARD
+   ======================================== */
 #dashboardSection .btn-primary {
   background: var(--primary);
   border-color: var(--primary);
@@ -268,7 +304,9 @@ body {
   box-shadow: 0 4px 15px rgba(220, 53, 69, 0.25);
 }
 
-/* Botones de acción de la tabla */
+/* ========================================
+   BOTONES DE ACCIÓN DE LA TABLA
+   ======================================== */
 #dashboardSection .btn-group .btn {
   margin: 0 2px;
   border-radius: 6px;
@@ -308,7 +346,9 @@ body {
   transform: scale(1.1);
 }
 
-/* Tabla */
+/* ========================================
+   TABLA
+   ======================================== */
 .table {
   background: #ffffff;
   border-radius: var(--border-radius);
@@ -326,6 +366,11 @@ body {
   text-align: center;
   font-size: 0.9rem;
   border-bottom: 2px solid var(--primary-hover);
+}
+
+.table th.text-center,
+.table td.text-center {
+  vertical-align: middle;
 }
 
 .table tbody tr {
@@ -352,7 +397,29 @@ body {
   background-color: #e9ecef;
 }
 
-/* Alertas */
+/* ========================================
+   NÚMEROS SECUENCIALES DE LA TABLA
+   ======================================== */
+.table .badge.bg-primary.rounded-pill {
+  font-size: 0.875rem;
+  font-weight: 600;
+  min-width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
+  transition: all 0.2s ease;
+}
+
+.table .badge.bg-primary.rounded-pill:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+/* ========================================
+   ALERTAS
+   ======================================== */
 .alert {
   border: none;
   border-radius: var(--border-radius);
@@ -414,7 +481,9 @@ body {
   border-left-color: var(--info);
 }
 
-/* Badges */
+/* ========================================
+   BADGES
+   ======================================== */
 .badge {
   border-radius: 6px;
   padding: 0.4rem 0.6rem;
@@ -447,7 +516,9 @@ body {
   border-color: #bb2d3b;
 }
 
-/* Breadcrumbs */
+/* ========================================
+   BREADCRUMBS
+   ======================================== */
 .breadcrumb {
   background: #ffffff;
   border-radius: 8px;
@@ -472,7 +543,9 @@ body {
   color: var(--secondary);
 }
 
-/* Headers de formularios */
+/* ========================================
+   HEADERS DE FORMULARIOS
+   ======================================== */
 .row.justify-content-center.mt-4 {
   margin-bottom: 2rem;
 }
@@ -500,7 +573,9 @@ body {
   white-space: nowrap;
 }
 
-/* Títulos y texto */
+/* ========================================
+   TÍTULOS Y TEXTO
+   ======================================== */
 .h3 {
   color: var(--dark);
   font-weight: 700;
@@ -525,7 +600,9 @@ body {
   margin-top: 0.5rem;
 }
 
-/* Formulario de login */
+/* ========================================
+   FORMULARIO DE LOGIN
+   ======================================== */
 .login-card {
   max-width: 600px;
   margin: 0 auto;
@@ -564,7 +641,9 @@ body {
   letter-spacing: 1px;
 }
 
-/* Input groups */
+/* ========================================
+   INPUT GROUPS
+   ======================================== */
 .input-group-lg .form-control,
 .input-group-lg .input-group-text {
   padding: 1rem 1.25rem;
@@ -584,18 +663,9 @@ body {
   background-color: rgba(13, 110, 253, 0.1);
 }
 
-/* Validación */
-.form-control.is-invalid {
-  border-color: var(--danger);
-  box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.15);
-}
-
-.form-control.is-valid {
-  border-color: var(--success);
-  box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.15);
-}
-
-/* Mensajes de ayuda */
+/* ========================================
+   MENSAJES DE AYUDA
+   ======================================== */
 .form-text {
   color: var(--secondary);
   font-size: 0.875rem;
@@ -606,7 +676,9 @@ body {
   border-left: 3px solid var(--info);
 }
 
-/* Spinner y toasts */
+/* ========================================
+   SPINNER Y TOASTS
+   ======================================== */
 .spinner-border {
   width: 2rem;
   height: 2rem;
@@ -619,7 +691,9 @@ body {
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 
-/* Scrollbar personalizada */
+/* ========================================
+   SCROLLBAR PERSONALIZADA
+   ======================================== */
 ::-webkit-scrollbar {
   width: 10px;
 }
@@ -638,7 +712,9 @@ body {
   background: linear-gradient(135deg, var(--primary-hover), var(--primary));
 }
 
-/* Animaciones */
+/* ========================================
+   ANIMACIONES
+   ======================================== */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -650,26 +726,35 @@ body {
   }
 }
 
-.card {
-  animation: fadeInUp 0.6s ease-out;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-/* Iconos */
+/* ========================================
+   ICONOS
+   ======================================== */
 .bi {
   transition: var(--transition);
 }
 
-.btn:hover .bi {
-  transform: scale(1.1);
-}
-
-/* Estados */
+/* ========================================
+   ESTADOS
+   ======================================== */
 .loading {
   opacity: 0.6;
   pointer-events: none;
 }
 
-/* Tooltips */
+/* ========================================
+   TOOLTIPS
+   ======================================== */
 .tooltip {
   font-size: 0.875rem;
 }
@@ -681,7 +766,26 @@ body {
   backdrop-filter: blur(10px);
 }
 
-/* Responsive */
+/* ========================================
+   INFORMACIÓN DE SECUENCIA
+   ======================================== */
+#sequenceInfo {
+  font-size: 0.875rem;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+#sequenceInfo:not([style*="display: none"]) {
+  animation: fadeIn 0.3s ease-in;
+}
+
+.text-muted .bi-info-circle {
+  color: #17a2b8;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
 @media (max-width: 768px) {
   .card-body {
     padding: 1.5rem;
