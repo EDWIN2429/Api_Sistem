@@ -1,0 +1,358 @@
+<?php
+
+// ========================================
+// CONFIGURACIÓN DE SEGURIDAD AVANZADA
+// ========================================
+// Centraliza todas las configuraciones de seguridad del sistema
+// ========================================
+
+// Incluir configuración principal primero
+require_once __DIR__ . '/config.php';
+
+// ========================================
+// CONFIGURACIÓN DE RATE LIMITING
+// ========================================
+define('RATE_LIMIT_ENABLED', true);
+define('RATE_LIMIT_WINDOW', 60); // segundos
+define('RATE_LIMIT_MAX_REQUESTS', RATE_LIMIT_PER_MINUTE);
+
+// ========================================
+// CONFIGURACIÓN DE VALIDACIÓN SQL
+// ========================================
+define('SQL_VALIDATION_STRICT', true);
+define('SQL_MAX_LENGTH', 5000);
+define('SQL_ALLOWED_KEYWORDS', ['SELECT', 'FROM', 'WHERE', 'AND', 'OR', 'ORDER', 'BY', 'GROUP', 'HAVING', 'LIMIT', 'OFFSET', 'JOIN', 'LEFT', 'RIGHT', 'INNER', 'OUTER', 'ON', 'AS', 'DISTINCT', 'COUNT', 'SUM', 'AVG', 'MAX', 'MIN']);
+
+// ========================================
+// CONFIGURACIÓN DE LOGGING
+// ========================================
+define('SECURITY_LOGGING_ENABLED', true);
+define('LOG_RETENTION_DAYS', 30);
+define('LOG_LEVEL', 'INFO'); // DEBUG, INFO, WARNING, ERROR, CRITICAL
+
+// ========================================
+// CONFIGURACIÓN DE ALERTAS
+// ========================================
+define('SECURITY_ALERTS_ENABLED', true);
+define('ALERT_EMAIL', 'admin@tudominio.com');
+define('ALERT_THRESHOLD', 5); // Número de violaciones antes de alerta
+
+// ========================================
+// CONFIGURACIÓN DE TIMEOUTS
+// ========================================
+define('QUERY_TIMEOUT_SECONDS', MAX_QUERY_EXECUTION_TIME);
+define('CONNECTION_TIMEOUT_SECONDS', 10);
+define('SESSION_TIMEOUT_SECONDS', 3600);
+
+// ========================================
+// CONFIGURACIÓN DE SANITIZACIÓN
+// ========================================
+define('XSS_PROTECTION_ENABLED', true);
+define('SQL_INJECTION_PROTECTION_ENABLED', true);
+define('CSRF_PROTECTION_ENABLED', true);
+
+// ========================================
+// CONFIGURACIÓN DE HEADERS DE SEGURIDAD
+// ========================================
+define('SECURITY_HEADERS', [
+    'X-Content-Type-Options' => 'nosniff',
+    'X-Frame-Options' => 'DENY',
+    'X-XSS-Protection' => '1; mode=block',
+    'Strict-Transport-Security' => 'max-age=31536000; includeSubDomains',
+    'Content-Security-Policy' => "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https:; font-src 'self' https://cdn.jsdelivr.net;"
+]);
+
+// ========================================
+// CLASE SECURITY MANAGER CENTRALIZADA
+// ========================================
+
+class SecurityManager
+{
+    private static $instance = null;
+
+    // ========================================
+    // PATRÓN SINGLETON
+    // ========================================
+    public static function getInstance()
+    {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+
+    // ========================================
+    // VALIDACIÓN SQL CENTRALIZADA
+    // ========================================
+    public function validateSQL($query)
+    {
+        if (!SQL_VALIDATION_STRICT) {
+            return true;
+        }
+
+        $query = trim($query);
+        $queryUpper = strtoupper($query);
+
+        // Solo SELECT permitido
+        if (strpos($queryUpper, 'SELECT') !== 0) {
+            return false;
+        }
+
+        // Validar longitud
+        if (strlen($query) > SQL_MAX_LENGTH) {
+            return false;
+        }
+
+        // Bloquear palabras clave peligrosas (solo si están siendo usadas como comandos)
+        $dangerousKeywords = [
+            'UNION',
+            'INSERT',
+            'UPDATE',
+            'DELETE',
+            'DROP',
+            'CREATE',
+            'ALTER',
+            'TRUNCATE',
+            'EXEC',
+            'EXECUTE',
+            'PROCEDURE',
+            'FUNCTION',
+            'TRIGGER',
+            'GRANT',
+            'REVOKE',
+            'INTO',
+            'OUTFILE',
+            'DUMPFILE',
+            'LOAD_FILE',
+            'SLEEP',
+            'BENCHMARK',
+            'WAIT'
+            // Removido: EVENT, VIEW - pueden ser parte de nombres de tablas
+        ];
+
+        foreach ($dangerousKeywords as $keyword) {
+            if (strpos($queryUpper, $keyword) !== false) {
+                return false;
+            }
+        }
+
+        // Bloquear caracteres peligrosos (solo los realmente peligrosos)
+        // Permitir punto y coma al final de la consulta (común en SQL)
+        $queryWithoutSemicolon = rtrim($query, ';');
+        if (preg_match('/[;]/', $queryWithoutSemicolon)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    // ========================================
+    // SANITIZACIÓN CENTRALIZADA
+    // ========================================
+    public function sanitizeInput($input)
+    {
+        if (is_array($input)) {
+            return array_map([$this, 'sanitizeInput'], $input);
+        }
+
+        if (is_string($input)) {
+            // Prevención XSS
+            if (XSS_PROTECTION_ENABLED) {
+                $input = htmlspecialchars($input, ENT_QUOTES, 'UTF-8');
+            }
+
+            // Prevención SQL Injection
+            if (SQL_INJECTION_PROTECTION_ENABLED) {
+                $input = str_replace([';', '--', '/*', '*/', 'xp_', 'sp_'], '', $input);
+                // Remover palabras peligrosas adicionales
+                $input = preg_replace('/\b(DROP|DELETE|INSERT|UPDATE|CREATE|ALTER|TRUNCATE)\b/i', '', $input);
+            }
+
+            // Limitar longitud
+            if (strlen($input) > 1000) {
+                $input = substr($input, 0, 1000);
+            }
+        }
+
+        return $input;
+    }
+
+    // ========================================
+    // LOGGING CENTRALIZADO
+    // ========================================
+    public function logEvent($eventType, $details, $level = 'INFO')
+    {
+        if (!SECURITY_LOGGING_ENABLED) {
+            return;
+        }
+
+        $logEntry = [
+            'timestamp' => date('Y-m-d H:i:s'),
+            'level' => $level,
+            'event_type' => $eventType,
+            'details' => $details,
+            'ip_address' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown',
+            'session_id' => session_id() ?? 'none'
+        ];
+
+        $logFile = __DIR__ . '/../logs/security_' . date('Y-m-d') . '.log';
+        $logDir = dirname($logFile);
+
+        if (!is_dir($logDir)) {
+            mkdir($logDir, 0755, true);
+        }
+
+        file_put_contents($logFile, json_encode($logEntry) . "\n", FILE_APPEND | LOCK_EX);
+
+        // Limpiar logs antiguos
+        $this->cleanupOldLogs();
+    }
+
+    // ========================================
+    // FUNCIONES AUXILIARES CENTRALIZADAS
+    // ========================================
+
+    /**
+     * 🔒 VALIDAR RATE LIMITING
+     */
+    public function checkRateLimit($ipAddress)
+    {
+        if (!RATE_LIMIT_ENABLED) {
+            return true;
+        }
+
+        $cacheFile = __DIR__ . '/../logs/rate_limit_' . date('Y-m-d-H') . '.log';
+        $currentTime = time();
+        $windowStart = $currentTime - RATE_LIMIT_WINDOW;
+
+        // Leer registros existentes
+        $requests = [];
+        if (file_exists($cacheFile)) {
+            $requests = json_decode(file_get_contents($cacheFile), true) ?: [];
+        }
+
+        // Filtrar solicitudes dentro de la ventana de tiempo
+        $requests = array_filter($requests, function ($req) use ($windowStart) {
+            return $req['timestamp'] > $windowStart;
+        });
+
+        // Contar solicitudes para esta IP
+        $ipRequests = array_filter($requests, function ($req) use ($ipAddress) {
+            return $req['ip'] === $ipAddress;
+        });
+
+        if (count($ipRequests) >= RATE_LIMIT_MAX_REQUESTS) {
+            return false; // Rate limit excedido
+        }
+
+        // Agregar nueva solicitud
+        $requests[] = [
+            'ip' => $ipAddress,
+            'timestamp' => $currentTime
+        ];
+
+        // Guardar en archivo
+        file_put_contents($cacheFile, json_encode($requests), LOCK_EX);
+
+        return true;
+    }
+
+    /**
+     * 🔒 APLICAR HEADERS DE SEGURIDAD
+     */
+    public function applyHeaders()
+    {
+        foreach (SECURITY_HEADERS as $header => $value) {
+            header("{$header}: {$value}");
+        }
+    }
+
+    /**
+     * 🔒 VALIDAR TOKEN CSRF
+     */
+    public function validateCSRFToken($token)
+    {
+        if (!CSRF_PROTECTION_ENABLED) {
+            return true;
+        }
+
+        if (!isset($_SESSION['csrf_token'])) {
+            return false;
+        }
+
+        return hash_equals($_SESSION['csrf_token'], $token);
+    }
+
+    /**
+     * 🔒 GENERAR TOKEN CSRF
+     */
+    public function generateCSRFToken()
+    {
+        if (!isset($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        }
+
+        return $_SESSION['csrf_token'];
+    }
+
+    /**
+     * 🔒 LIMPIEZA DE LOGS ANTIGUOS
+     */
+    private function cleanupOldLogs()
+    {
+        $logDir = __DIR__ . '/../logs/';
+        $cutoffDate = date('Y-m-d', strtotime('-' . LOG_RETENTION_DAYS . ' days'));
+
+        $files = glob($logDir . '/../logs/*.log');
+        foreach ($files as $file) {
+            $filename = basename($file);
+            if (preg_match('/(\d{4}-\d{2}-\d{2})/', $filename, $matches)) {
+                $fileDate = $matches[1];
+                if ($fileDate < $cutoffDate) {
+                    unlink($file);
+                }
+            }
+        }
+    }
+}
+
+// ========================================
+// FUNCIONES DE COMPATIBILIDAD (MANTENIDAS)
+// ========================================
+// Estas funciones se mantienen por compatibilidad con código existente
+
+function checkRateLimit($ipAddress)
+{
+    return SecurityManager::getInstance()->checkRateLimit($ipAddress);
+}
+
+function applySecurityHeaders()
+{
+    SecurityManager::getInstance()->applyHeaders();
+}
+
+function validateCSRFToken($token)
+{
+    return SecurityManager::getInstance()->validateCSRFToken($token);
+}
+
+function generateCSRFToken()
+{
+    return SecurityManager::getInstance()->generateCSRFToken();
+}
+
+function sanitizeInput($input)
+{
+    return SecurityManager::getInstance()->sanitizeInput($input);
+}
+
+function validateSQLQuery($query)
+{
+    return SecurityManager::getInstance()->validateSQL($query);
+}
+
+function logSecurityEvent($eventType, $details, $level = 'INFO')
+{
+    SecurityManager::getInstance()->logEvent($eventType, $details, $level);
+}

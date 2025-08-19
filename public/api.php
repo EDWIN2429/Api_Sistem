@@ -7,6 +7,11 @@
 
 // Incluir configuración
 require_once '../app/config.php';
+require_once '../app/database_external.php';
+require_once '../app/security_config.php';
+
+// 🔒 APLICAR HEADERS DE SEGURIDAD
+applySecurityHeaders();
 
 // Headers para API
 header('Content-Type: application/json; charset=utf-8');
@@ -35,9 +40,23 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     exit();
 }
 
-// Validar parámetros requeridos
-$apiToken = $_GET['apiToken'] ?? null;
-$queryTitle = $_GET['query'] ?? null;
+// 🔒 VALIDAR RATE LIMITING
+$clientIP = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+if (!checkRateLimit($clientIP)) {
+    http_response_code(429);
+    echo json_encode([
+        'success' => false,
+        'error' => 'Rate limit excedido',
+        'message' => 'Demasiadas solicitudes. Intente nuevamente en ' . RATE_LIMIT_WINDOW . ' segundos',
+        'status_code' => 429,
+        'retry_after' => RATE_LIMIT_WINDOW
+    ]);
+    exit();
+}
+
+// 🔒 SANITIZAR PARÁMETROS DE ENTRADA
+$apiToken = sanitizeInput($_GET['apiToken'] ?? null);
+$queryTitle = sanitizeInput($_GET['query'] ?? null);
 
 if (!$apiToken || !$queryTitle) {
     http_response_code(400);
@@ -71,7 +90,7 @@ try {
     $db = getDB();
 
     // Buscar la consulta por título
-    $sql = "SELECT id, title, sql_query, created_at, updated_at FROM queries WHERE title = ? AND active = 1";
+    $sql = "SELECT id, title, sql_query, created_at, updated_at FROM queries WHERE title = ?";
     $params = [$queryTitle];
 
     $result = $db->query($sql, $params);
@@ -104,15 +123,40 @@ try {
         exit();
     }
 
-    // Ejecutar la consulta
+    // 🔒 VALIDACIÓN CRÍTICA DE SEGURIDAD ADICIONAL
+    $security = SecurityManager::getInstance();
+    if (!$security->validateSQL($sqlQuery)) {
+        $security->logEvent('SECURITY_VIOLATION', 'Consulta bloqueada: ' . $sqlQuery, 'WARNING');
+        http_response_code(403);
+        echo json_encode([
+            'success' => false,
+            'error' => 'Consulta bloqueada por seguridad',
+            'message' => 'La consulta contiene elementos no permitidos',
+            'status_code' => 403,
+            'query_title' => $queryTitle
+        ]);
+        exit();
+    }
+
+    // 🔒 EJECUTAR CONSULTA EN BASE DE DATOS EXTERNA
     try {
-        $data = $db->query($sqlQuery);
+        // Obtener instancia de BD externa
+        $dbExternal = DatabaseExternal::getInstance();
+
+        // 🔒 SANITIZAR PARÁMETROS ANTES DE EJECUTAR
+        $sanitizedQuery = $security->sanitizeInput($sqlQuery);
+
+        // 🔒 EJECUTAR CONSULTA EN BD EXTERNA
+        $data = $dbExternal->executeQuery($sanitizedQuery);
+
+        // 🔒 OBTENER ESTADÍSTICAS DE SEGURIDAD
+        $securityStats = $dbExternal->getSecurityStats();
 
         // Respuesta exitosa
         http_response_code(200);
         echo json_encode([
             'success' => true,
-            'message' => 'Consulta ejecutada exitosamente',
+            'message' => 'Consulta ejecutada exitosamente en base de datos externa',
             'data' => [
                 'query_info' => [
                     'id' => $query['id'],
@@ -122,24 +166,32 @@ try {
                 ],
                 'results' => $data,
                 'total_rows' => count($data),
-                'execution_time' => microtime(true) - $_SERVER['REQUEST_TIME_FLOAT']
+                'execution_time' => microtime(true) - $_SERVER['REQUEST_TIME_FLOAT'],
+                'security_info' => [
+                    'executed_in' => 'external_database',
+                    'security_validations_passed' => true,
+                    'total_security_checks' => $securityStats['total_queries']
+                ]
             ],
             'status_code' => 200
         ]);
+
+        // 🔒 LOGGING DE EJECUCIÓN EXITOSA
+        logSuccessfulExecution($queryTitle, $securityStats);
     } catch (Exception $e) {
-        // Error al ejecutar la consulta
+        // Error al ejecutar la consulta en BD externa
         http_response_code(500);
         echo json_encode([
             'success' => false,
-            'error' => 'Error al ejecutar consulta',
-            'message' => 'La consulta SQL no pudo ser ejecutada',
+            'error' => 'Error al ejecutar consulta en base de datos externa',
+            'message' => 'La consulta SQL no pudo ser ejecutada en la base de datos de datos reales',
             'details' => 'Error interno del servidor',
             'status_code' => 500,
             'query_title' => $queryTitle
         ]);
 
-        // Log del error (en producción, no mostrar detalles al usuario)
-        error_log("API Error - Query execution failed: " . $e->getMessage());
+        // 🔒 LOGGING DE ERROR DE SEGURIDAD
+        logSecurityError($queryTitle, $e->getMessage());
     }
 } catch (Exception $e) {
     // Error general del sistema
@@ -155,5 +207,59 @@ try {
     error_log("API Error - System error: " . $e->getMessage());
 }
 
-// Usar la función getDB() de config.php
-require_once '../app/config.php';
+// ========================================
+// FUNCIONES DE VALIDACIÓN Y LOGGING
+// ========================================
+
+// Función eliminada - Usar SecurityManager::validateSQL() en su lugar
+
+/**
+ * 🔒 LOGGING DE EJECUCIÓN EXITOSA
+ */
+function logSuccessfulExecution($queryTitle, $securityStats)
+{
+    $logEntry = [
+        'timestamp' => date('Y-m-d H:i:s'),
+        'event' => 'SECURITY_ERROR',
+        'query_title' => $queryTitle,
+        'ip_address' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+        'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown',
+        'security_stats' => $securityStats
+    ];
+
+    $logFile = __DIR__ . '/../logs/api_success_' . date('Y-m-d') . '.log';
+    $logDir = dirname($logFile);
+
+    if (!is_dir($logDir)) {
+        mkdir($logDir, 0755, true);
+    }
+
+    file_put_contents($logFile, json_encode($logEntry) . "\n", FILE_APPEND | LOCK_EX);
+}
+
+/**
+ * 🔒 LOGGING DE ERRORES DE SEGURIDAD
+ */
+function logSecurityError($queryTitle, $errorMessage)
+{
+    $logEntry = [
+        'timestamp' => date('Y-m-d H:i:s'),
+        'event' => 'SECURITY_ERROR',
+        'query_title' => $queryTitle,
+        'error_message' => $errorMessage,
+        'ip_address' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+        'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown'
+    ];
+
+    $logFile = __DIR__ . '/../logs/api_errors_' . date('Y-m-d') . '.log';
+    $logDir = dirname($logFile);
+
+    if (!is_dir($logDir)) {
+        mkdir($logDir, 0755, true);
+    }
+
+    file_put_contents($logFile, json_encode($logEntry) . "\n", FILE_APPEND | LOCK_EX);
+
+    // 🔒 LOGGING DE ERROR AL ERROR LOG DEL SISTEMA
+    error_log("API Security Error - Query: {$queryTitle}, Error: {$errorMessage}");
+}

@@ -42,74 +42,15 @@ class QueriesManager
     // ========================================
     private function validateSelectQuery($sql)
     {
-        $sqlLower = strtolower(trim($sql));
+        // Usar el SecurityManager centralizado para validaciones
+        require_once __DIR__ . '/security_config.php';
+        $security = SecurityManager::getInstance();
 
-        // Verificar que comience con SELECT
-        if (!preg_match('/^select\s+/i', $sqlLower)) {
+        if (!$security->validateSQL($sql)) {
             return [
                 'valid' => false,
-                'message' => 'Solo se permiten consultas SELECT'
+                'message' => 'La consulta contiene elementos no permitidos por seguridad'
             ];
-        }
-
-        // Verificar que NO contenga comandos peligrosos
-        $dangerousKeywords = [
-            'insert',
-            'update',
-            'delete',
-            'drop',
-            'create',
-            'alter',
-            'truncate',
-            'replace',
-            'grant',
-            'revoke',
-            'execute'
-        ];
-
-        foreach ($dangerousKeywords as $keyword) {
-            if (strpos($sqlLower, $keyword) !== false) {
-                return [
-                    'valid' => false,
-                    'message' => 'La consulta contiene comandos no permitidos: ' . strtoupper($keyword)
-                ];
-            }
-        }
-
-        // Verificar que NO contenga múltiples consultas
-        $sqlClean = preg_replace('/\s+/', ' ', trim($sql));
-
-        if (preg_match('/;\s*(select|insert|update|delete|create|drop|alter|truncate|replace|grant|revoke|execute)/i', $sqlClean)) {
-            return [
-                'valid' => false,
-                'message' => 'No se permiten múltiples consultas separadas por punto y coma'
-            ];
-        }
-
-        // Verificar que NO contenga solo punto y coma
-        if (trim($sql) === ';') {
-            return [
-                'valid' => false,
-                'message' => 'Consulta SQL inválida'
-            ];
-        }
-
-        // Verificar funciones peligrosas
-        $dangerousFunctions = [
-            'sleep',
-            'benchmark',
-            'load_file',
-            'into outfile',
-            'into dumpfile'
-        ];
-
-        foreach ($dangerousFunctions as $func) {
-            if (strpos($sqlLower, $func) !== false) {
-                return [
-                    'valid' => false,
-                    'message' => 'La consulta contiene funciones no permitidas: ' . strtoupper($func)
-                ];
-            }
         }
 
         return ['valid' => true, 'message' => 'Consulta válida'];

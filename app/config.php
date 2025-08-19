@@ -10,7 +10,7 @@
 function loadEnv($path)
 {
     if (!file_exists($path)) {
-        throw new Exception("El archivo .env no existe en la ruta especificada.");
+        return false; // Archivo no existe
     }
 
     $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -23,38 +23,11 @@ function loadEnv($path)
             $_ENV[$name] = $value;
         }
     }
+    return true; // Archivo cargado exitosamente
 }
 
-// Cargar archivo .env o usar valores por defecto
-try {
-    loadEnv(__DIR__ . '/.env');
-} catch (Exception $e) {
-    setDefaultEnvironment();
-}
-
-// ========================================
-// VALORES POR DEFECTO
-// ========================================
-function setDefaultEnvironment()
-{
-    $defaults = [
-        'DB_HOST' => 'localhost',
-        'DB_PORT' => '3307',
-        'DB_NAME' => 'api_system',
-        'DB_USER' => 'root',
-        'DB_PASSWORD' => '',
-        'DB_CHARSET' => 'utf8mb4',
-        'API_TOKEN' => 'mi_token_secreto_12345',
-        'ADMIN_USERNAME' => 'admin',
-        'ADMIN_PASSWORD' => 'admin123',
-        'APP_ENV' => 'development',
-        'TIMEZONE' => 'America/Mexico_City'
-    ];
-
-    foreach ($defaults as $key => $value) {
-        putenv("{$key}={$value}");
-    }
-}
+// Cargar archivo .env si existe
+loadEnv(__DIR__ . '/.env');
 
 // ========================================
 // CONSTANTES DE LA APLICACIÓN
@@ -71,6 +44,23 @@ define('DB_NAME', getenv('DB_NAME') ?: 'api_system');
 define('DB_USER', getenv('DB_USER') ?: 'root');
 define('DB_PASSWORD', getenv('DB_PASSWORD') ?: '');
 define('DB_CHARSET', getenv('DB_CHARSET') ?: 'utf8mb4');
+
+// ========================================
+// CONSTANTES DE BASE DE DATOS EXTERNA
+// ========================================
+define('DB_EXT_HOST', getenv('DB_EXT_HOST') ?: 'localhost');
+define('DB_EXT_PORT', getenv('DB_EXT_PORT') ?: '3307');
+define('DB_EXT_NAME', getenv('DB_EXT_NAME') ?: 'datos_reales');
+define('DB_EXT_USER', getenv('DB_EXT_USER') ?: 'usuario_externo');
+define('DB_EXT_PASSWORD', getenv('DB_EXT_PASSWORD') ?: 'password_seguro_123');
+define('DB_EXT_CHARSET', getenv('DB_EXT_CHARSET') ?: 'utf8mb4');
+
+// ========================================
+// CONSTANTES DE SEGURIDAD
+// ========================================
+define('MAX_QUERY_EXECUTION_TIME', getenv('MAX_QUERY_EXECUTION_TIME') ?: '30');
+define('MAX_CONNECTIONS', getenv('MAX_CONNECTIONS') ?: '10');
+define('RATE_LIMIT_PER_MINUTE', getenv('RATE_LIMIT_PER_MINUTE') ?: '100');
 
 // ========================================
 // CONSTANTES DE API
