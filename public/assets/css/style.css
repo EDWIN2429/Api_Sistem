@@ -1,10 +1,7 @@
 /* ========================================
-   SISTEMA DE API - ESTILOS OPTIMIZADOS Y ORGANIZADOS
+   SISTEMA DE API - ESTILOS OPTIMIZADOS
    ======================================== */
 
-/* ========================================
-   VARIABLES CSS
-   ======================================== */
 :root {
   --primary: #0d6efd;
   --primary-hover: #0b5ed7;
@@ -19,18 +16,12 @@
   --transition: all 0.3s ease;
 }
 
-/* ========================================
-   ESTILOS BASE
-   ======================================== */
 body {
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   min-height: 100vh;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* ========================================
-   NAVBAR
-   ======================================== */
 .navbar {
   background: var(--primary) !important;
   box-shadow: 0 2px 8px rgba(13, 110, 253, 0.15);
@@ -42,17 +33,11 @@ body {
   font-size: 1.4rem;
 }
 
-/* ========================================
-   CONTENEDORES
-   ======================================== */
 .container {
   position: relative;
   z-index: 1;
 }
 
-/* ========================================
-   TARJETAS
-   ======================================== */
 .card {
   border: 1px solid rgba(0, 0, 0, 0.05);
   border-radius: var(--border-radius);
@@ -79,9 +64,6 @@ body {
   padding: 2rem;
 }
 
-/* ========================================
-   FORMULARIOS
-   ======================================== */
 .form-label {
   font-weight: 600;
   color: var(--dark);
@@ -128,9 +110,6 @@ body {
   box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.15);
 }
 
-/* ========================================
-   FORMULARIOS ESPECÍFICOS
-   ======================================== */
 .form-container {
   max-width: 800px;
   margin: 0 auto;
@@ -162,9 +141,6 @@ body {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
 }
 
-/* ========================================
-   TEXTAREAS SQL
-   ======================================== */
 #sql_query,
 #edit_sql_query {
   background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
@@ -182,9 +158,6 @@ body {
   background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
 }
 
-/* ========================================
-   BOTONES
-   ======================================== */
 .btn {
   border-radius: var(--border-radius);
   padding: 0.75rem 1.5rem;
@@ -202,7 +175,6 @@ body {
   transform: scale(1.1);
 }
 
-/* Botones primarios */
 .btn-primary {
   background: var(--primary);
   box-shadow: 0 2px 8px rgba(13, 110, 253, 0.2);
@@ -223,7 +195,6 @@ body {
   box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
 }
 
-/* Botones outline */
 .btn-outline-primary {
   color: var(--primary);
   border: 2px solid var(--primary);
@@ -260,9 +231,6 @@ body {
   border-color: var(--secondary);
 }
 
-/* ========================================
-   BOTONES DEL DASHBOARD
-   ======================================== */
 #dashboardSection .btn-primary {
   background: var(--primary);
   border-color: var(--primary);
@@ -304,9 +272,6 @@ body {
   box-shadow: 0 4px 15px rgba(220, 53, 69, 0.25);
 }
 
-/* ========================================
-   BOTONES DE ACCIÓN DE LA TABLA
-   ======================================== */
 #dashboardSection .btn-group .btn {
   margin: 0 2px;
   border-radius: 6px;
@@ -346,9 +311,6 @@ body {
   transform: scale(1.1);
 }
 
-/* ========================================
-   TABLA
-   ======================================== */
 .table {
   background: #ffffff;
   border-radius: var(--border-radius);
@@ -397,9 +359,6 @@ body {
   background-color: #e9ecef;
 }
 
-/* ========================================
-   NÚMEROS SECUENCIALES DE LA TABLA
-   ======================================== */
 .table .badge.bg-primary.rounded-pill {
   font-size: 0.875rem;
   font-weight: 600;
@@ -417,9 +376,6 @@ body {
   box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
 }
 
-/* ========================================
-   ALERTAS
-   ======================================== */
 .alert {
   border: none;
   border-radius: var(--border-radius);
@@ -481,9 +437,6 @@ body {
   border-left-color: var(--info);
 }
 
-/* ========================================
-   BADGES
-   ======================================== */
 .badge {
   border-radius: 6px;
   padding: 0.4rem 0.6rem;
@@ -516,9 +469,6 @@ body {
   border-color: #bb2d3b;
 }
 
-/* ========================================
-   BREADCRUMBS
-   ======================================== */
 .breadcrumb {
   background: #ffffff;
   border-radius: 8px;
@@ -543,9 +493,6 @@ body {
   color: var(--secondary);
 }
 
-/* ========================================
-   HEADERS DE FORMULARIOS
-   ======================================== */
 .row.justify-content-center.mt-4 {
   margin-bottom: 2rem;
 }
@@ -573,9 +520,6 @@ body {
   white-space: nowrap;
 }
 
-/* ========================================
-   TÍTULOS Y TEXTO
-   ======================================== */
 .h3 {
   color: var(--dark);
   font-weight: 700;
@@ -600,9 +544,6 @@ body {
   margin-top: 0.5rem;
 }
 
-/* ========================================
-   FORMULARIO DE LOGIN
-   ======================================== */
 .login-card {
   max-width: 600px;
   margin: 0 auto;
@@ -641,9 +582,6 @@ body {
   letter-spacing: 1px;
 }
 
-/* ========================================
-   INPUT GROUPS
-   ======================================== */
 .input-group-lg .form-control,
 .input-group-lg .input-group-text {
   padding: 1rem 1.25rem;
@@ -663,9 +601,6 @@ body {
   background-color: rgba(13, 110, 253, 0.1);
 }
 
-/* ========================================
-   MENSAJES DE AYUDA
-   ======================================== */
 .form-text {
   color: var(--secondary);
   font-size: 0.875rem;
@@ -676,9 +611,6 @@ body {
   border-left: 3px solid var(--info);
 }
 
-/* ========================================
-   SPINNER Y TOASTS
-   ======================================== */
 .spinner-border {
   width: 2rem;
   height: 2rem;
@@ -691,9 +623,6 @@ body {
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 
-/* ========================================
-   SCROLLBAR PERSONALIZADA
-   ======================================== */
 ::-webkit-scrollbar {
   width: 10px;
 }
@@ -712,9 +641,6 @@ body {
   background: linear-gradient(135deg, var(--primary-hover), var(--primary));
 }
 
-/* ========================================
-   ANIMACIONES
-   ======================================== */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -737,24 +663,15 @@ body {
   }
 }
 
-/* ========================================
-   ICONOS
-   ======================================== */
 .bi {
   transition: var(--transition);
 }
 
-/* ========================================
-   ESTADOS
-   ======================================== */
 .loading {
   opacity: 0.6;
   pointer-events: none;
 }
 
-/* ========================================
-   TOOLTIPS
-   ======================================== */
 .tooltip {
   font-size: 0.875rem;
 }
@@ -766,9 +683,6 @@ body {
   backdrop-filter: blur(10px);
 }
 
-/* ========================================
-   INFORMACIÓN DE SECUENCIA
-   ======================================== */
 #sequenceInfo {
   font-size: 0.875rem;
   color: #6c757d;
@@ -783,9 +697,6 @@ body {
   color: #17a2b8;
 }
 
-/* ========================================
-   RESPONSIVE
-   ======================================== */
 @media (max-width: 768px) {
   .card-body {
     padding: 1.5rem;

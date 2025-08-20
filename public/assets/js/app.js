@@ -3,19 +3,18 @@
  * Maneja autenticación, gestión de consultas y comunicación con el backend
  */
 
-// ========================================
-// CLASE PRINCIPAL - ApiSystem
-// ========================================
 class ApiSystem {
+  // ===== CONSTRUCTOR E INICIALIZACIÓN =====
   constructor() {
     this.initializeConfiguration();
     this.initializeState();
     this.init();
   }
 
-  // ========================================
-  // INICIALIZACIÓN
-  // ========================================
+  /**
+   * Configura la URL base según el puerto del servidor
+   * Soporta diferentes configuraciones de desarrollo y producción
+   */
   initializeConfiguration() {
     const currentPort = window.location.port;
     const currentHost = window.location.hostname;
@@ -29,6 +28,9 @@ class ApiSystem {
     }
   }
 
+  /**
+   * Inicializa el estado interno de la aplicación
+   */
   initializeState() {
     this.currentUser = null;
     this.isAuthenticated = false;
@@ -37,20 +39,27 @@ class ApiSystem {
     this.currentSearch = "";
   }
 
+  /**
+   * Inicializa la aplicación y vincula eventos
+   */
   init() {
     this.bindEvents();
     this.checkAuthStatus();
   }
 
-  // ========================================
-  // MANEJO DE EVENTOS
-  // ========================================
+  // ===== MANEJO DE EVENTOS =====
+  /**
+   * Vincula todos los eventos de la interfaz
+   */
   bindEvents() {
     this.bindFormEvents();
     this.bindTableEvents();
     this.bindSearchEvents();
   }
 
+  /**
+   * Vincula eventos de formularios (login, crear, editar)
+   */
   bindFormEvents() {
     const loginForm = document.getElementById("loginForm");
     if (loginForm) {
@@ -68,8 +77,11 @@ class ApiSystem {
     }
   }
 
+  /**
+   * Vincula eventos de la tabla usando event delegation
+   * Permite manejar botones de eliminar dinámicamente
+   */
   bindTableEvents() {
-    // Event delegation para botones de eliminar
     document.addEventListener("click", (e) => {
       const deleteButton = e.target.closest(".btn-delete");
       if (deleteButton) {
@@ -86,6 +98,9 @@ class ApiSystem {
     });
   }
 
+  /**
+   * Vincula eventos de búsqueda y paginación
+   */
   bindSearchEvents() {
     const searchInput = document.getElementById("searchInput");
     if (searchInput) {
@@ -104,9 +119,10 @@ class ApiSystem {
     }
   }
 
-  // ========================================
-  // AUTENTICACIÓN
-  // ========================================
+  // ===== AUTENTICACIÓN Y SESIÓN =====
+  /**
+   * Verifica el estado de autenticación al cargar la página
+   */
   async checkAuthStatus() {
     try {
       const response = await fetch(`${this.baseUrl}auth.php?action=check`, {
@@ -127,11 +143,14 @@ class ApiSystem {
         this.showLoginForm();
       }
     } catch (error) {
-      console.error("Error checking auth status:", error);
+      console.error("error al verificar el estado de autenticación:", error);
       this.showLoginForm();
     }
   }
 
+  /**
+   * Maneja el proceso de login del usuario
+   */
   async handleLogin(e) {
     e.preventDefault();
 
@@ -183,6 +202,9 @@ class ApiSystem {
     }
   }
 
+  /**
+   * Maneja el proceso de logout del usuario
+   */
   async handleLogout(e = null) {
     if (e) e.preventDefault();
 
@@ -208,9 +230,10 @@ class ApiSystem {
     }
   }
 
-  // ========================================
-  // GESTIÓN DE CONSULTAS
-  // ========================================
+  // ===== GESTIÓN DE CONSULTAS (CRUD) =====
+  /**
+   * Maneja la creación de nuevas consultas SQL
+   */
   async handleCreateQuery(e) {
     e.preventDefault();
 
@@ -219,19 +242,7 @@ class ApiSystem {
     const description = formData.get("description").trim();
     const sqlQuery = formData.get("sql_query").trim();
 
-    if (!title || !sqlQuery) {
-      this.showAlert(
-        "Por favor, completa todos los campos obligatorios",
-        "warning"
-      );
-      return;
-    }
-
-    if (!sqlQuery.toUpperCase().startsWith("SELECT")) {
-      this.showAlert(
-        "Solo se permiten consultas SELECT por seguridad",
-        "danger"
-      );
+    if (!this.validateQueryForm(title, sqlQuery)) {
       return;
     }
 
@@ -242,7 +253,6 @@ class ApiSystem {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: "create",
           title: title,
           description: description,
           sql_query: sqlQuery,
@@ -270,6 +280,9 @@ class ApiSystem {
     }
   }
 
+  /**
+   * Maneja la edición de consultas SQL existentes
+   */
   async handleEditQuery(e) {
     e.preventDefault();
 
@@ -279,19 +292,7 @@ class ApiSystem {
     const description = formData.get("edit_description").trim();
     const sqlQuery = formData.get("edit_sql_query").trim();
 
-    if (!title || !sqlQuery) {
-      this.showAlert(
-        "Por favor, completa todos los campos obligatorios",
-        "warning"
-      );
-      return;
-    }
-
-    if (!sqlQuery.toUpperCase().startsWith("SELECT")) {
-      this.showAlert(
-        "Solo se permiten consultas SELECT por seguridad",
-        "danger"
-      );
+    if (!this.validateQueryForm(title, sqlQuery)) {
       return;
     }
 
@@ -324,13 +325,40 @@ class ApiSystem {
         );
       }
     } catch (error) {
-      console.error("Error updating query:", error);
+      console.error("error al actualizar la consulta:", error);
       this.showAlert("Error de conexión: " + error.message, "danger");
     } finally {
       this.showLoading(false);
     }
   }
 
+  /**
+   * Valida el formulario de consulta antes de enviarlo
+   * Verifica campos obligatorios y tipo de consulta SQL
+   */
+  validateQueryForm(title, sqlQuery) {
+    if (!title || !sqlQuery) {
+      this.showAlert(
+        "Por favor, completa todos los campos obligatorios",
+        "warning"
+      );
+      return false;
+    }
+
+    if (!sqlQuery.toUpperCase().startsWith("SELECT")) {
+      this.showAlert(
+        "Solo se permiten consultas SELECT por seguridad",
+        "danger"
+      );
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Maneja la eliminación de consultas SQL
+   */
   async handleDeleteQuery(id, title) {
     if (
       !confirm(`¿Estás seguro de que quieres eliminar la consulta "${title}"?`)
@@ -363,6 +391,9 @@ class ApiSystem {
     }
   }
 
+  /**
+   * Carga los datos de una consulta específica para edición
+   */
   async loadQueryData(queryId) {
     try {
       const response = await fetch(`${this.baseUrl}queries.php?id=${queryId}`, {
@@ -397,6 +428,9 @@ class ApiSystem {
     }
   }
 
+  /**
+   * Pobla el formulario de edición con los datos existentes
+   */
   populateEditForm(query) {
     const idField = document.getElementById("query_id");
     const titleField = document.getElementById("edit_title");
@@ -409,9 +443,9 @@ class ApiSystem {
     if (sqlField) sqlField.value = query.sql_query;
   }
 
-  // ========================================
-  // CARGA Y VISUALIZACIÓN DE CONSULTAS
-  // ========================================
+  /**
+   * Carga la lista de consultas con paginación y búsqueda
+   */
   async loadQueries() {
     try {
       this.toggleLoading(true);
@@ -454,6 +488,10 @@ class ApiSystem {
     }
   }
 
+  // ===== INTERFAZ DE USUARIO Y TABLA =====
+  /**
+   * Renderiza la tabla de consultas con los datos recibidos
+   */
   renderQueriesTable(queries) {
     const tbody = document.querySelector("#queriesTableBody");
     if (!tbody) return;
@@ -516,31 +554,43 @@ class ApiSystem {
     });
   }
 
-  // ========================================
-  // PAGINACIÓN Y BÚSQUEDA
-  // ========================================
+  /**
+   * Implementa búsqueda de consultas por título o contenido
+   */
   searchQueries(searchTerm = "") {
     this.currentSearch = searchTerm;
     this.currentPage = 1;
     this.loadQueries();
   }
 
+  /**
+   * Cambia el límite de consultas por página
+   */
   changeLimit(limit) {
     this.currentLimit = limit;
     this.currentPage = 1;
     this.loadQueries();
   }
 
+  /**
+   * Cambia a una página específica de resultados
+   */
   changePage(page) {
     this.currentPage = page;
     this.loadQueries();
   }
 
+  /**
+   * Calcula el número secuencial para la paginación
+   */
   getSequenceNumber(index) {
     const offset = (this.currentPage - 1) * this.currentLimit;
     return offset + index + 1;
   }
 
+  /**
+   * Genera la navegación de paginación
+   */
   generatePagination(totalPages, currentPage) {
     const paginationNav = document.getElementById("paginationNav");
     if (!paginationNav) return;
@@ -574,9 +624,10 @@ class ApiSystem {
     paginationNav.innerHTML = paginationHTML;
   }
 
-  // ========================================
-  // INTERFAZ DE USUARIO
-  // ========================================
+  // ===== CONTROL DE INTERFAZ Y NAVEGACIÓN =====
+  /**
+   * Muestra el formulario de login y oculta el dashboard
+   */
   showLoginForm() {
     const loginSection = document.getElementById("loginSection");
     const dashboardSection = document.getElementById("dashboardSection");
@@ -590,6 +641,9 @@ class ApiSystem {
     if (loginForm) loginForm.reset();
   }
 
+  /**
+   * Muestra el dashboard administrativo y oculta el login
+   */
   showAdminDashboard() {
     const loginSection = document.getElementById("loginSection");
     const dashboardSection = document.getElementById("dashboardSection");
@@ -602,6 +656,9 @@ class ApiSystem {
     this.loadQueries();
   }
 
+  /**
+   * Controla la visualización del spinner de carga
+   */
   toggleLoading(show) {
     const loadingSpinner = document.getElementById("loadingSpinner");
     const noResults = document.getElementById("noResults");
@@ -612,6 +669,9 @@ class ApiSystem {
     if (queriesTable) queriesTable.style.display = show ? "none" : "block";
   }
 
+  /**
+   * Muestra mensaje cuando no hay resultados de búsqueda
+   */
   showNoResults() {
     const noResults = document.getElementById("noResults");
     const queriesTable = document.querySelector(".table-responsive");
@@ -620,6 +680,9 @@ class ApiSystem {
     if (queriesTable) queriesTable.style.display = "none";
   }
 
+  /**
+   * Muestra información de secuencia para la paginación
+   */
   showSequenceInfo(pagination, totalItems) {
     const sequenceInfo = document.getElementById("sequenceInfo");
     if (!sequenceInfo) return;
@@ -631,9 +694,10 @@ class ApiSystem {
     sequenceInfo.style.display = "block";
   }
 
-  // ========================================
-  // UTILIDADES
-  // ========================================
+  // ===== UTILIDADES Y HERRAMIENTAS =====
+  /**
+   * Muestra alertas usando el sistema de toasts de Bootstrap
+   */
   showAlert(message, type = "info") {
     if (window.showToast) {
       window.showToast(message, type);
@@ -667,6 +731,9 @@ class ApiSystem {
     }, 5000);
   }
 
+  /**
+   * Controla el estado de carga de los botones de formulario
+   */
   showLoading(show) {
     const buttons = document.querySelectorAll('button[type="submit"]');
     buttons.forEach((button) => {
@@ -681,6 +748,9 @@ class ApiSystem {
     });
   }
 
+  /**
+   * Escapa HTML para prevenir XSS en la tabla
+   */
   escapeHtml(text) {
     const div = document.createElement("div");
     div.textContent = text;
@@ -688,17 +758,16 @@ class ApiSystem {
   }
 }
 
-// ========================================
-// INICIALIZACIÓN DE LA APLICACIÓN
-// ========================================
+// ===== INICIALIZACIÓN DE LA APLICACIÓN =====
 document.addEventListener("DOMContentLoaded", () => {
   window.apiSystem = new ApiSystem();
   initializePageSpecificFeatures();
 });
 
-// ========================================
-// FUNCIONALIDADES ESPECÍFICAS POR PÁGINA
-// ========================================
+// ===== FUNCIONES DE INICIALIZACIÓN ESPECÍFICAS POR PÁGINA =====
+/**
+ * Inicializa funcionalidades específicas según la página actual
+ */
 function initializePageSpecificFeatures() {
   const currentPage = window.location.pathname.split("/").pop();
 
@@ -715,18 +784,23 @@ function initializePageSpecificFeatures() {
   }
 }
 
+/**
+ * Inicializa la página de creación de consultas
+ */
 function initializeCreatePage() {
   initializeSQLValidation("sql_query", "Crear Consulta");
   initializeTitleValidation("title");
   initializeFormValidation("createQueryForm");
 }
 
+/**
+ * Inicializa la página de edición de consultas
+ */
 function initializeEditPage() {
   initializeSQLValidation("edit_sql_query", "Actualizar Consulta");
   initializeTitleValidation("edit_title");
   initializeFormValidation("editQueryForm");
 
-  // Cargar datos de la consulta
   const urlParams = new URLSearchParams(window.location.search);
   const queryId = urlParams.get("id");
 
@@ -748,13 +822,17 @@ function initializeEditPage() {
   }
 }
 
+/**
+ * Inicializa la página principal del dashboard
+ */
 function initializeIndexPage() {
   // No se necesita inicialización adicional para index.html
 }
 
-// ========================================
-// FUNCIONES DE VALIDACIÓN
-// ========================================
+// ===== SISTEMA DE VALIDACIONES =====
+/**
+ * Implementa validación en tiempo real para consultas SQL
+ */
 function initializeSQLValidation(inputId, buttonText) {
   const sqlInput = document.getElementById(inputId);
   if (!sqlInput) return;
@@ -780,6 +858,9 @@ function initializeSQLValidation(inputId, buttonText) {
   });
 }
 
+/**
+ * Implementa validación en tiempo real para títulos de consultas
+ */
 function initializeTitleValidation(inputId) {
   const titleInput = document.getElementById(inputId);
   if (!titleInput) return;
@@ -797,6 +878,9 @@ function initializeTitleValidation(inputId) {
   });
 }
 
+/**
+ * Implementa validación del formulario antes del envío
+ */
 function initializeFormValidation(formId) {
   const form = document.getElementById(formId);
   if (!form) return;
@@ -835,6 +919,10 @@ function initializeFormValidation(formId) {
   });
 }
 
+// ===== FUNCIONES UTILITARIAS DE VALIDACIÓN =====
+/**
+ * Muestra mensajes de error para validación de títulos
+ */
 function showTitleError(inputId, message) {
   const errorAlert = document.getElementById(
     inputId.replace("title", "titleErrorAlert")
@@ -848,6 +936,9 @@ function showTitleError(inputId, message) {
   }
 }
 
+/**
+ * Oculta mensajes de error para validación de títulos
+ */
 function hideTitleError(inputId) {
   const errorAlert = document.getElementById(
     inputId.replace("title", "titleErrorAlert")
@@ -857,9 +948,10 @@ function hideTitleError(inputId) {
   }
 }
 
-// ========================================
-// FUNCIONES GLOBALES
-// ========================================
+// ===== FUNCIONES GLOBALES Y UTILIDADES =====
+/**
+ * Sistema de notificaciones toast para la aplicación
+ */
 window.showToast = function (message, type = "info") {
   const toastContainer = document.querySelector(".toast-container");
   if (!toastContainer) return;
@@ -888,6 +980,9 @@ window.showToast = function (message, type = "info") {
   }, 5000);
 };
 
+/**
+ * Funciones globales para uso desde HTML
+ */
 window.refreshQueries = function () {
   if (window.apiSystem) {
     window.apiSystem.loadQueries();
@@ -916,5 +1011,5 @@ window.logout = async function () {
   }
 };
 
-// Exportar para uso global
+// Exportar clase para uso global
 window.ApiSystem = ApiSystem;
