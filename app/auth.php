@@ -17,9 +17,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-// ========================================
-// CLASE PRINCIPAL - Auth
-// ========================================
+/**
+ * CLASE AUTH - Maneja autenticación y sesiones de administrador
+ */
 class Auth
 {
     private $db;
@@ -29,9 +29,6 @@ class Auth
         $this->db = getDB();
     }
 
-    // ========================================
-    // AUTENTICACIÓN
-    // ========================================
     public function login($username, $password)
     {
         try {
@@ -67,9 +64,6 @@ class Auth
         ];
     }
 
-    // ========================================
-    // VERIFICACIÓN DE SESIÓN
-    // ========================================
     public function isAuthenticated()
     {
         return isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true;
@@ -92,30 +86,21 @@ class Auth
         ];
     }
 
-    // ========================================
-    // MÉTODOS PRIVADOS
-    // ========================================
     private function createSession($username)
     {
         $_SESSION['admin_logged_in'] = true;
         $_SESSION['admin_username'] = $username;
         $_SESSION['login_time'] = time();
+        $_SESSION['session_token'] = $this->generateSessionToken();
     }
 
     private function generateSessionToken()
     {
         return bin2hex(random_bytes(32));
     }
-
-    public function validateSessionToken($token)
-    {
-        return $this->isAuthenticated();
-    }
 }
 
-// ========================================
-// MANEJO DE REQUESTS HTTP
-// ========================================
+// Manejo de requests HTTP
 $auth = new Auth();
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -136,9 +121,6 @@ switch ($method) {
         break;
 }
 
-// ========================================
-// FUNCIONES AUXILIARES PARA MANEJAR REQUESTS
-// ========================================
 function handlePostRequest($auth)
 {
     $input = json_decode(file_get_contents('php://input'), true);

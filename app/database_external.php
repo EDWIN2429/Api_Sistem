@@ -1,11 +1,10 @@
 <?php
 
-// ========================================
-// CLASE DATABASE EXTERNAL
-// ========================================
-// Maneja conexiones a la base de datos externa (datos reales)
-// Implementa medidas de seguridad críticas para prevenir inyección SQL
-// ========================================
+/**
+ * CLASE DATABASE EXTERNAL
+ * Maneja conexiones a la base de datos externa (datos reales)
+ * Implementa medidas de seguridad críticas para prevenir inyección SQL
+ */
 
 class DatabaseExternal
 {
@@ -15,18 +14,12 @@ class DatabaseExternal
     private $maxConnections;
     private $executionLog = [];
 
-    // ========================================
-    // CONSTRUCTOR PRIVADO (Singleton)
-    // ========================================
     private function __construct()
     {
         $this->maxConnections = MAX_CONNECTIONS;
         $this->initializeConnectionPool();
     }
 
-    // ========================================
-    // PATRÓN SINGLETON
-    // ========================================
     public static function getInstance()
     {
         if (self::$instance === null) {
@@ -35,9 +28,6 @@ class DatabaseExternal
         return self::$instance;
     }
 
-    // ========================================
-    // INICIALIZACIÓN DEL POOL DE CONEXIONES
-    // ========================================
     private function initializeConnectionPool()
     {
         try {
@@ -67,12 +57,9 @@ class DatabaseExternal
         }
     }
 
-    // ========================================
-    // EJECUCIÓN SEGURA DE CONSULTAS
-    // ========================================
     public function executeQuery($query, $params = [])
     {
-        // 🔒 VALIDACIÓN CRÍTICA DE SEGURIDAD
+        // Validación crítica de seguridad
         require_once __DIR__ . '/security_config.php';
         $security = SecurityManager::getInstance();
 
@@ -81,28 +68,28 @@ class DatabaseExternal
             throw new Exception("Consulta no permitida por razones de seguridad");
         }
 
-        // 🔒 VALIDACIÓN DE TIEMPO DE EJECUCIÓN
+        // Validación de tiempo de ejecución
         $startTime = microtime(true);
 
         try {
-            // 🔒 PREPARED STATEMENT OBLIGATORIO
+            // Prepared statement obligatorio
             $stmt = $this->connection->prepare($query);
 
             if (!$stmt) {
                 throw new Exception("Error al preparar la consulta");
             }
 
-            // 🔒 EJECUCIÓN CON PARÁMETROS SANITIZADOS
+            // Ejecución con parámetros sanitizados
             $stmt->execute($params);
 
-            // 🔒 VALIDACIÓN DE TIEMPO
+            // Validación de tiempo
             $executionTime = microtime(true) - $startTime;
             if ($executionTime > MAX_QUERY_EXECUTION_TIME) {
                 $security->logEvent('TIMEOUT_VIOLATION', 'Consulta excedió tiempo límite: ' . $executionTime . 's', 'WARNING');
                 throw new Exception("Consulta excedió el tiempo límite de ejecución");
             }
 
-            // 🔒 LOGGING DE SEGURIDAD
+            // Logging de seguridad
             $security->logEvent('QUERY_EXECUTED', [
                 'query' => $query,
                 'params' => $params,
@@ -117,12 +104,9 @@ class DatabaseExternal
         }
     }
 
-    // ========================================
-    // ALERTAS DE SEGURIDAD
-    // ========================================
     private function sendSecurityAlert($eventType, $details)
     {
-        // 🔒 LOGGING DE ALERTA
+        // Logging de alerta
         $alertFile = __DIR__ . '/../logs/alerts_' . date('Y-m-d') . '.log';
         $alertMessage = "🚨 ALERTA DE SEGURIDAD - " . $eventType . "\n";
         $alertMessage .= "Timestamp: " . date('Y-m-d H:i:s') . "\n";
@@ -134,9 +118,6 @@ class DatabaseExternal
         }
     }
 
-    // ========================================
-    // OBTENER ESTADÍSTICAS DE SEGURIDAD
-    // ========================================
     public function getSecurityStats()
     {
         return [
@@ -151,9 +132,6 @@ class DatabaseExternal
         ];
     }
 
-    // ========================================
-    // LIMPIEZA DE RECURSOS
-    // ========================================
     public function __destruct()
     {
         if ($this->connection) {
@@ -161,13 +139,7 @@ class DatabaseExternal
         }
     }
 
-    // ========================================
-    // PREVENCIÓN DE CLONACIÓN
-    // ========================================
     private function __clone() {}
 
-    // ========================================
-    // PREVENCIÓN DE DESERIALIZACIÓN
-    // ========================================
     public function __wakeup() {}
 }

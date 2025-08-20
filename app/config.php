@@ -32,47 +32,47 @@ loadEnv(__DIR__ . '/.env');
 // ========================================
 // CONSTANTES DE LA APLICACIÓN
 // ========================================
-define('APP_NAME', getenv('APP_NAME') ?: 'Sistema de API');
-define('APP_VERSION', getenv('APP_VERSION') ?: '1.0.0');
+define('APP_NAME', getenv('APP_NAME'));
+define('APP_VERSION', getenv('APP_VERSION'));
 
 // ========================================
 // CONSTANTES DE BASE DE DATOS
 // ========================================
-define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
-define('DB_PORT', getenv('DB_PORT') ?: '3307');
-define('DB_NAME', getenv('DB_NAME') ?: 'api_system');
-define('DB_USER', getenv('DB_USER') ?: 'root');
-define('DB_PASSWORD', getenv('DB_PASSWORD') ?: '');
-define('DB_CHARSET', getenv('DB_CHARSET') ?: 'utf8mb4');
+define('DB_HOST', getenv('DB_HOST'));
+define('DB_PORT', getenv('DB_PORT'));
+define('DB_NAME', getenv('DB_NAME'));
+define('DB_USER', getenv('DB_USER'));
+define('DB_PASSWORD', getenv('DB_PASSWORD'));
+define('DB_CHARSET', getenv('DB_CHARSET'));
 
 // ========================================
 // CONSTANTES DE BASE DE DATOS EXTERNA
 // ========================================
-define('DB_EXT_HOST', getenv('DB_EXT_HOST') ?: 'localhost');
-define('DB_EXT_PORT', getenv('DB_EXT_PORT') ?: '3307');
-define('DB_EXT_NAME', getenv('DB_EXT_NAME') ?: 'datos_reales');
-define('DB_EXT_USER', getenv('DB_EXT_USER') ?: 'usuario_externo');
-define('DB_EXT_PASSWORD', getenv('DB_EXT_PASSWORD') ?: 'password_seguro_123');
-define('DB_EXT_CHARSET', getenv('DB_EXT_CHARSET') ?: 'utf8mb4');
+define('DB_EXT_HOST', getenv('DB_EXT_HOST'));
+define('DB_EXT_PORT', getenv('DB_EXT_PORT'));
+define('DB_EXT_NAME', getenv('DB_EXT_NAME'));
+define('DB_EXT_USER', getenv('DB_EXT_USER'));
+define('DB_EXT_PASSWORD', getenv('DB_EXT_PASSWORD'));
+define('DB_EXT_CHARSET', getenv('DB_EXT_CHARSET'));
 
 // ========================================
 // CONSTANTES DE SEGURIDAD
 // ========================================
-define('MAX_QUERY_EXECUTION_TIME', getenv('MAX_QUERY_EXECUTION_TIME') ?: '30');
-define('MAX_CONNECTIONS', getenv('MAX_CONNECTIONS') ?: '10');
-define('RATE_LIMIT_PER_MINUTE', getenv('RATE_LIMIT_PER_MINUTE') ?: '100');
+define('MAX_QUERY_EXECUTION_TIME', getenv('MAX_QUERY_EXECUTION_TIME'));
+define('MAX_CONNECTIONS', getenv('MAX_CONNECTIONS'));
+define('RATE_LIMIT_PER_MINUTE', getenv('RATE_LIMIT_PER_MINUTE'));
 
 // ========================================
 // CONSTANTES DE API
 // ========================================
-define('API_TOKEN', getenv('API_TOKEN') ?: 'mi_token_secreto_12345');
-define('ADMIN_USERNAME', getenv('ADMIN_USERNAME') ?: 'admin');
-define('ADMIN_PASSWORD', getenv('ADMIN_PASSWORD') ?: 'admin123');
+define('API_TOKEN', getenv('API_TOKEN'));
+define('ADMIN_USERNAME', getenv('ADMIN_USERNAME'));
+define('ADMIN_PASSWORD', getenv('ADMIN_PASSWORD'));
 
 // ========================================
 // CONSTANTES DE ENTORNO
 // ========================================
-define('APP_ENV', getenv('APP_ENV') ?: 'development');
+define('APP_ENV', getenv('APP_ENV'));
 
 // ========================================
 // CONFIGURACIÓN DE ERRORES
@@ -82,7 +82,7 @@ configureErrorReporting();
 // ========================================
 // CONFIGURACIÓN DE ZONA HORARIA
 // ========================================
-$timezone = getenv('TIMEZONE') ?: 'America/Mexico_City';
+$timezone = getenv('TIMEZONE');
 date_default_timezone_set($timezone);
 
 // ========================================

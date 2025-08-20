@@ -1,0 +1,2 @@
+{"timestamp":"2025-08-19 21:15:51","event":"SECURITY_ERROR","query_title":"prueba11","ip_address":"::1","user_agent":"PostmanRuntime\/7.45.0","security_stats":{"total_queries":0,"security_violations":0,"timeout_violations":0,"recent_events":[]}}
+{"timestamp":"2025-08-19 21:15:57","event":"SECURITY_ERROR","query_title":"prueba11","ip_address":"::1","user_agent":"PostmanRuntime\/7.45.0","security_stats":{"total_queries":0,"security_violations":0,"timeout_violations":0,"recent_events":[]}}

@@ -1,59 +1,44 @@
 <?php
 
-// ========================================
-// CONFIGURACIÓN DE SEGURIDAD AVANZADA
-// ========================================
-// Centraliza todas las configuraciones de seguridad del sistema
-// ========================================
+/**
+ * CONFIGURACIÓN DE SEGURIDAD AVANZADA
+ * Centraliza todas las configuraciones de seguridad del sistema
+ */
 
 // Incluir configuración principal primero
 require_once __DIR__ . '/config.php';
 
-// ========================================
-// CONFIGURACIÓN DE RATE LIMITING
-// ========================================
+// Configuración de rate limiting
 define('RATE_LIMIT_ENABLED', true);
 define('RATE_LIMIT_WINDOW', 60); // segundos
 define('RATE_LIMIT_MAX_REQUESTS', RATE_LIMIT_PER_MINUTE);
 
-// ========================================
-// CONFIGURACIÓN DE VALIDACIÓN SQL
-// ========================================
+// Configuración de validación SQL
 define('SQL_VALIDATION_STRICT', true);
 define('SQL_MAX_LENGTH', 5000);
 define('SQL_ALLOWED_KEYWORDS', ['SELECT', 'FROM', 'WHERE', 'AND', 'OR', 'ORDER', 'BY', 'GROUP', 'HAVING', 'LIMIT', 'OFFSET', 'JOIN', 'LEFT', 'RIGHT', 'INNER', 'OUTER', 'ON', 'AS', 'DISTINCT', 'COUNT', 'SUM', 'AVG', 'MAX', 'MIN']);
 
-// ========================================
-// CONFIGURACIÓN DE LOGGING
-// ========================================
+// Configuración de logging
 define('SECURITY_LOGGING_ENABLED', true);
 define('LOG_RETENTION_DAYS', 30);
 define('LOG_LEVEL', 'INFO'); // DEBUG, INFO, WARNING, ERROR, CRITICAL
 
-// ========================================
-// CONFIGURACIÓN DE ALERTAS
-// ========================================
+// Configuración de alertas
 define('SECURITY_ALERTS_ENABLED', true);
 define('ALERT_EMAIL', 'admin@tudominio.com');
 define('ALERT_THRESHOLD', 5); // Número de violaciones antes de alerta
 
-// ========================================
-// CONFIGURACIÓN DE TIMEOUTS
-// ========================================
+// Configuración de timeouts
 define('QUERY_TIMEOUT_SECONDS', MAX_QUERY_EXECUTION_TIME);
 define('CONNECTION_TIMEOUT_SECONDS', 10);
 define('SESSION_TIMEOUT_SECONDS', 3600);
 
-// ========================================
-// CONFIGURACIÓN DE SANITIZACIÓN
-// ========================================
+// Configuración de sanitización
 define('XSS_PROTECTION_ENABLED', true);
 define('SQL_INJECTION_PROTECTION_ENABLED', true);
 define('CSRF_PROTECTION_ENABLED', true);
 
-// ========================================
-// CONFIGURACIÓN DE HEADERS DE SEGURIDAD
-// ========================================
+// Configuración de headers de seguridad
 define('SECURITY_HEADERS', [
     'X-Content-Type-Options' => 'nosniff',
     'X-Frame-Options' => 'DENY',
@@ -62,17 +47,13 @@ define('SECURITY_HEADERS', [
     'Content-Security-Policy' => "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https:; font-src 'self' https://cdn.jsdelivr.net;"
 ]);
 
-// ========================================
-// CLASE SECURITY MANAGER CENTRALIZADA
-// ========================================
-
+/**
+ * CLASE SECURITY MANAGER CENTRALIZADA
+ */
 class SecurityManager
 {
     private static $instance = null;
 
-    // ========================================
-    // PATRÓN SINGLETON
-    // ========================================
     public static function getInstance()
     {
         if (self::$instance === null) {
@@ -81,9 +62,6 @@ class SecurityManager
         return self::$instance;
     }
 
-    // ========================================
-    // VALIDACIÓN SQL CENTRALIZADA
-    // ========================================
     public function validateSQL($query)
     {
         if (!SQL_VALIDATION_STRICT) {
@@ -103,7 +81,7 @@ class SecurityManager
             return false;
         }
 
-        // Bloquear palabras clave peligrosas (solo si están siendo usadas como comandos)
+        // Bloquear palabras clave peligrosas
         $dangerousKeywords = [
             'UNION',
             'INSERT',
@@ -127,7 +105,6 @@ class SecurityManager
             'SLEEP',
             'BENCHMARK',
             'WAIT'
-            // Removido: EVENT, VIEW - pueden ser parte de nombres de tablas
         ];
 
         foreach ($dangerousKeywords as $keyword) {
@@ -136,8 +113,7 @@ class SecurityManager
             }
         }
 
-        // Bloquear caracteres peligrosos (solo los realmente peligrosos)
-        // Permitir punto y coma al final de la consulta (común en SQL)
+        // Bloquear caracteres peligrosos
         $queryWithoutSemicolon = rtrim($query, ';');
         if (preg_match('/[;]/', $queryWithoutSemicolon)) {
             return false;
@@ -146,9 +122,6 @@ class SecurityManager
         return true;
     }
 
-    // ========================================
-    // SANITIZACIÓN CENTRALIZADA
-    // ========================================
     public function sanitizeInput($input)
     {
         if (is_array($input)) {
@@ -164,7 +137,6 @@ class SecurityManager
             // Prevención SQL Injection
             if (SQL_INJECTION_PROTECTION_ENABLED) {
                 $input = str_replace([';', '--', '/*', '*/', 'xp_', 'sp_'], '', $input);
-                // Remover palabras peligrosas adicionales
                 $input = preg_replace('/\b(DROP|DELETE|INSERT|UPDATE|CREATE|ALTER|TRUNCATE)\b/i', '', $input);
             }
 
@@ -177,9 +149,6 @@ class SecurityManager
         return $input;
     }
 
-    // ========================================
-    // LOGGING CENTRALIZADO
-    // ========================================
     public function logEvent($eventType, $details, $level = 'INFO')
     {
         if (!SECURITY_LOGGING_ENABLED) {
@@ -209,13 +178,6 @@ class SecurityManager
         $this->cleanupOldLogs();
     }
 
-    // ========================================
-    // FUNCIONES AUXILIARES CENTRALIZADAS
-    // ========================================
-
-    /**
-     * 🔒 VALIDAR RATE LIMITING
-     */
     public function checkRateLimit($ipAddress)
     {
         if (!RATE_LIMIT_ENABLED) {
@@ -258,9 +220,6 @@ class SecurityManager
         return true;
     }
 
-    /**
-     * 🔒 APLICAR HEADERS DE SEGURIDAD
-     */
     public function applyHeaders()
     {
         foreach (SECURITY_HEADERS as $header => $value) {
@@ -268,9 +227,6 @@ class SecurityManager
         }
     }
 
-    /**
-     * 🔒 VALIDAR TOKEN CSRF
-     */
     public function validateCSRFToken($token)
     {
         if (!CSRF_PROTECTION_ENABLED) {
@@ -284,9 +240,6 @@ class SecurityManager
         return hash_equals($_SESSION['csrf_token'], $token);
     }
 
-    /**
-     * 🔒 GENERAR TOKEN CSRF
-     */
     public function generateCSRFToken()
     {
         if (!isset($_SESSION['csrf_token'])) {
@@ -296,15 +249,12 @@ class SecurityManager
         return $_SESSION['csrf_token'];
     }
 
-    /**
-     * 🔒 LIMPIEZA DE LOGS ANTIGUOS
-     */
     private function cleanupOldLogs()
     {
         $logDir = __DIR__ . '/../logs/';
         $cutoffDate = date('Y-m-d', strtotime('-' . LOG_RETENTION_DAYS . ' days'));
 
-        $files = glob($logDir . '/../logs/*.log');
+        $files = glob($logDir . '*.log');
         foreach ($files as $file) {
             $filename = basename($file);
             if (preg_match('/(\d{4}-\d{2}-\d{2})/', $filename, $matches)) {
@@ -317,11 +267,7 @@ class SecurityManager
     }
 }
 
-// ========================================
-// FUNCIONES DE COMPATIBILIDAD (MANTENIDAS)
-// ========================================
-// Estas funciones se mantienen por compatibilidad con código existente
-
+// Funciones de compatibilidad (mantenidas)
 function checkRateLimit($ipAddress)
 {
     return SecurityManager::getInstance()->checkRateLimit($ipAddress);

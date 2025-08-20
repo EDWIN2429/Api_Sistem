@@ -1,18 +1,15 @@
 <?php
 
-// No incluir config.php aquí para evitar referencia circular
+/**
+ * CLASE DATABASE - Singleton para conexión a base de datos
+ * No incluir config.php aquí para evitar referencia circular
+ */
 
-// ========================================
-// CLASE PRINCIPAL - Database
-// ========================================
 class Database
 {
     private static $instance = null;
     private $connection;
 
-    // ========================================
-    // CONSTRUCTOR Y SINGLETON
-    // ========================================
     private function __construct()
     {
         $this->establishConnection();
@@ -26,9 +23,6 @@ class Database
         return self::$instance;
     }
 
-    // ========================================
-    // CONEXIÓN A BASE DE DATOS
-    // ========================================
     private function establishConnection()
     {
         try {
@@ -53,9 +47,6 @@ class Database
         ];
     }
 
-    // ========================================
-    // MÉTODOS PÚBLICOS
-    // ========================================
     public function getConnection()
     {
         return $this->connection;
@@ -87,9 +78,6 @@ class Database
         return $this->connection->lastInsertId();
     }
 
-    // ========================================
-    // MANEJO DE TABLAS
-    // ========================================
     public function tableExists($tableName)
     {
         $sql = "SHOW TABLES LIKE '" . $tableName . "'";
@@ -106,20 +94,15 @@ class Database
         return true;
     }
 
-    // ========================================
-    // MÉTODOS PRIVADOS
-    // ========================================
     private function getQueriesTableSchema()
     {
-        return "CREATE TABLE queries (
+        return "CREATE TABLE IF NOT EXISTS queries (
             id INT AUTO_INCREMENT PRIMARY KEY,
             title VARCHAR(255) UNIQUE NOT NULL,
             description TEXT,
             sql_query TEXT NOT NULL,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
     }
 }
-
-// La función getDB() ya está definida en config.php
